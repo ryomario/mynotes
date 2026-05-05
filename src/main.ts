@@ -13,8 +13,19 @@ let activeNoteId: string | null = null;
 let activeDropdownId: string | null = null;
 let draggedItemId: string | null = null;
 
+// Settings Elements
+const settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement;
+const settingsSidebar = document.getElementById('settings-sidebar') as HTMLElement;
+const settingsClose = document.getElementById('settings-close') as HTMLButtonElement;
+const darkModeToggle = document.getElementById('dark-mode-toggle') as HTMLInputElement;
+const fontSizeRange = document.getElementById('font-size-range') as HTMLInputElement;
+const fontSizeValue = document.getElementById('font-size-value') as HTMLElement;
+const fontFamilySelect = document.getElementById('font-family-select') as HTMLSelectElement;
+const colorBtns = document.querySelectorAll('.color-btn');
+
 async function init() {
   notes = await storage.getNotes();
+  loadSettings();
   renderNotesList();
 
   if (notes.length > 0) {
@@ -24,18 +35,95 @@ async function init() {
   }
 }
 
+// Settings Logic
+function loadSettings() {
+  const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
+
+  // Dark Mode
+  if (settings.darkMode === false) {
+    document.body.classList.add('light-mode');
+    darkModeToggle.checked = false;
+  }
+
+  // Font Size
+  if (settings.fontSize) {
+    fontSizeRange.value = settings.fontSize;
+    fontSizeValue.textContent = `${settings.fontSize}px`;
+    document.documentElement.style.setProperty('--editor-font-size', `${settings.fontSize}px`);
+  }
+
+  // Font Family
+  if (settings.fontFamily) {
+    fontFamilySelect.value = settings.fontFamily;
+    const font = settings.fontFamily === 'Serif' ? 'Georgia, serif' :
+      settings.fontFamily === 'Mono' ? 'monospace' :
+        "'Inter', sans-serif";
+    document.documentElement.style.setProperty('--editor-font-family', font);
+  }
+
+  // Color
+  if (settings.color) {
+    document.documentElement.style.setProperty('--editor-text-color', settings.color);
+    colorBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-color') === settings.color);
+    });
+  }
+}
+
+function saveSettings(key: string, value: any) {
+  const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
+  settings[key] = value;
+  localStorage.setItem('mynotes_settings', JSON.stringify(settings));
+}
+
+settingsBtn.addEventListener('click', () => settingsSidebar.classList.add('show'));
+settingsClose.addEventListener('click', () => settingsSidebar.classList.remove('show'));
+
+darkModeToggle.addEventListener('change', (e) => {
+  const isDark = (e.target as HTMLInputElement).checked;
+  document.body.classList.toggle('light-mode', !isDark);
+  saveSettings('darkMode', isDark);
+});
+
+fontSizeRange.addEventListener('input', (e) => {
+  const val = (e.target as HTMLInputElement).value;
+  fontSizeValue.textContent = `${val}px`;
+  document.documentElement.style.setProperty('--editor-font-size', `${val}px`);
+  saveSettings('fontSize', val);
+});
+
+fontFamilySelect.addEventListener('change', (e) => {
+  const val = (e.target as HTMLSelectElement).value;
+  const font = val === 'Serif' ? 'Georgia, serif' :
+    val === 'Mono' ? 'monospace' :
+      "'Inter', sans-serif";
+  document.documentElement.style.setProperty('--editor-font-family', font);
+  saveSettings('fontFamily', val);
+});
+
+colorBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const color = btn.getAttribute('data-color')!;
+    document.documentElement.style.setProperty('--editor-text-color', color);
+    colorBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    saveSettings('color', color);
+  });
+});
+
+// Original App Logic (modified for brevity or kept as is)
 function renderNotesList() {
   notesList.innerHTML = '';
-  
+
   // Sort by pinned (true first), then order (desc), then updatedAt (desc)
   const sortedNotes = [...notes].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
-    
+
     const orderA = a.order ?? 0;
     const orderB = b.order ?? 0;
     if (orderA !== orderB) return orderB - orderA;
-    
+
     return b.updatedAt - a.updatedAt;
   });
 
@@ -43,7 +131,7 @@ function renderNotesList() {
     const title = getTitle(note.content);
     const relativeTime = getRelativeTime(note.updatedAt);
     const fullDate = new Date(note.updatedAt).toLocaleString();
-    
+
     const div = document.createElement('div');
     div.dataset.id = note.id;
     div.className = `note-item ${note.id === activeNoteId ? 'active' : ''} ${note.pinned ? 'pinned' : ''} ${activeDropdownId === note.id ? 'dropdown-active' : ''}`;
@@ -82,7 +170,7 @@ function renderNotesList() {
         </div>
       </div>
     `;
-    
+
     // Drag and Drop Events
     div.addEventListener('dragstart', (e) => {
       draggedItemId = note.id;
@@ -156,25 +244,25 @@ function renderNotesList() {
 async function reorderNotes(draggedId: string, targetId: string) {
   const draggedIndex = notes.findIndex(n => n.id === draggedId);
   const targetIndex = notes.findIndex(n => n.id === targetId);
-  
+
   if (draggedIndex !== -1 && targetIndex !== -1) {
     const [draggedItem] = notes.splice(draggedIndex, 1);
     notes.splice(targetIndex, 0, draggedItem);
-    
+
     // Update order values for all notes (top-down)
     // Higher order = appears higher in the list (since we sort desc)
     notes.forEach((note, index) => {
       note.order = notes.length - index;
       storage.saveNote(note);
     });
-    
+
     renderNotesList();
   }
 }
 
 function toggleDropdown(id: string) {
   const previousId = activeDropdownId;
-  
+
   if (activeDropdownId === id) {
     activeDropdownId = null;
   } else {
@@ -219,16 +307,16 @@ function selectNote(id: string) {
   const previousId = activeNoteId;
   activeNoteId = id;
   const note = notes.find(n => n.id === id);
-  
+
   if (note) {
     noteEditor.value = note.content;
     noteEditor.readOnly = !!note.locked;
-    
+
     if (previousId) {
       const prevItem = notesList.querySelector(`[data-id="${previousId}"]`);
       prevItem?.classList.remove('active');
     }
-    
+
     const newItem = notesList.querySelector(`[data-id="${id}"]`);
     newItem?.classList.add('active');
   }
@@ -262,16 +350,10 @@ async function saveCurrentNote() {
     note.content = noteEditor.value;
     note.updatedAt = Date.now();
     await storage.saveNote(note);
-    if (needToRenderList) {
-      renderNotesList();
-    } else {
-      const noteItem = notesList.querySelector(`[data-id="${note.id}"]`);
-      if (noteItem) {
-        const dateEl = noteItem.querySelector('.note-date') as HTMLElement;
-        if (dateEl) {
-          dateEl.innerHTML = `${getRelativeTime(note.updatedAt)} ${note.locked ? '🔒' : ''}`;
-        }
-      }
+    if (needToRenderList) renderNotesList();
+    else {
+      const el = notesList.querySelector(`[data-id="${note.id}"] .note-date`);
+      if (el) el.innerHTML = `${getRelativeTime(note.updatedAt)} ${note.locked ? '🔒' : ''}`;
     }
   }
 }
@@ -289,7 +371,7 @@ async function toggleLock(id: string) {
   const note = notes.find(n => n.id === id);
   if (note) {
     note.locked = !note.locked;
-    
+
     if (activeNoteId === id) {
       noteEditor.readOnly = note.locked;
     }
@@ -305,8 +387,8 @@ async function toggleLock(id: string) {
       const lockBtn = noteItem.querySelector('.lock-btn') as HTMLButtonElement;
       if (lockBtn) {
         const lockIcon = lockBtn.querySelector('path') as SVGPathElement;
-        const lockPath = note.locked 
-          ? 'M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8,6A4,4 0 0,1 12,2A4,4 0 0,1 16,6V8H8V6Z' 
+        const lockPath = note.locked
+          ? 'M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8,6A4,4 0 0,1 12,2A4,4 0 0,1 16,6V8H8V6Z'
           : 'M12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17A2,2 0 0,1 10,15A2,2 0 0,1 12,13M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8,6A4,4 0 0,1 12,2A4,4 0 0,1 16,6V8H8V6M18,20H6V10H18V20Z';
         lockIcon.setAttribute('d', lockPath);
         lockBtn.childNodes[lockBtn.childNodes.length - 1].textContent = ` ${note.locked ? 'Unlock' : 'Lock'}`;
@@ -357,5 +439,9 @@ setInterval(() => {
     }
   });
 }, 30000);
+
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const appContainer = document.getElementById('app');
+sidebarToggle.addEventListener('click', () => appContainer.classList.toggle('sidebar-hidden'));
 
 init();
