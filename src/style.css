@@ -18,7 +18,7 @@
   --editor-text-color: #f8fafc;
 }
 
-body.light-mode {
+html.light-mode {
   --bg-color: #f1f5f9;
   --sidebar-bg: rgba(255, 255, 255, 0.8);
   --text-primary: #1e293b;

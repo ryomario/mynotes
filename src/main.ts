@@ -1,4 +1,3 @@
-import './style.css';
 import { state, initNotes } from './state';
 import { getSortedNotes } from './utils/noteUtils';
 import { initSettings, loadSettings } from './ui/settings';

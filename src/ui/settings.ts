@@ -21,7 +21,7 @@ export function loadSettings() {
 
   // Dark Mode
   if (settings.darkMode === false) {
-    document.body.classList.add('light-mode');
+    document.documentElement.classList.add('light-mode');
     darkModeToggle.checked = false;
   }
 
@@ -67,7 +67,7 @@ export function initSettings() {
 
   darkModeToggle.addEventListener('change', (e) => {
     const isDark = (e.target as HTMLInputElement).checked;
-    document.body.classList.toggle('light-mode', !isDark);
+    document.documentElement.classList.toggle('light-mode', !isDark);
     saveSettings('darkMode', isDark);
   });
 
