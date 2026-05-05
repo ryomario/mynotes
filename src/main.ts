@@ -202,7 +202,18 @@ async function saveCurrentNote() {
     note.content = noteEditor.value;
     note.updatedAt = Date.now();
     await storage.saveNote(note);
-    if (needToRenderList) renderNotesList();
+    if (needToRenderList) {
+      renderNotesList();
+    } else {
+      // Update date directly in DOM if list is not re-rendered
+      const noteItem = notesList.querySelector(`[data-id="${note.id}"]`);
+      if (noteItem) {
+        const dateEl = noteItem.querySelector('.note-date') as HTMLElement;
+        if (dateEl) {
+          dateEl.innerHTML = `${getRelativeTime(note.updatedAt)} ${note.locked ? '🔒' : ''}`;
+        }
+      }
+    }
   }
 }
 
@@ -277,5 +288,22 @@ noteEditor.addEventListener('input', () => {
   clearTimeout(saveTimeout);
   saveTimeout = window.setTimeout(saveCurrentNote, 300);
 });
+
+// Poll to update relative time in the sidebar every 30 seconds
+setInterval(() => {
+  const noteItems = notesList.querySelectorAll('.note-item');
+  noteItems.forEach(item => {
+    const id = (item as HTMLElement).dataset.id;
+    const note = notes.find(n => n.id === id);
+    if (note) {
+      const dateEl = item.querySelector('.note-date') as HTMLElement;
+      if (dateEl) {
+        const relativeTime = getRelativeTime(note.updatedAt);
+        // Preserve the lock icon if present
+        dateEl.innerHTML = `${relativeTime} ${note.locked ? '🔒' : ''}`;
+      }
+    }
+  });
+}, 30000);
 
 init();

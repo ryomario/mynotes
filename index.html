@@ -1,28 +1,30 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mynotes</title>
-  </head>
-  <body>
-    <div id="app" class="app-container">
-      <aside class="sidebar">
-        <header class="sidebar-header">
-          <h2>My Notes</h2>
-          <button id="add-note-btn" class="btn-add" title="New Note">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-          </button>
-        </header>
-        <nav id="notes-list" class="notes-list"></nav>
-      </aside>
-      <main class="editor-container">
-        <textarea id="note-editor" placeholder="Start writing..." spellcheck="false"></textarea>
-      </main>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Notes</title>
+</head>
+
+<body>
+  <div id="app" class="app-container">
+    <aside class="sidebar">
+      <header class="sidebar-header">
+        <h2>My Notes</h2>
+        <button id="add-note-btn" class="btn-add" title="New Note">
+          <svg viewBox="0 0 24 24" width="24" height="24">
+            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          </svg>
+        </button>
+      </header>
+      <nav id="notes-list" class="notes-list"></nav>
+    </aside>
+    <main class="editor-container">
+      <textarea id="note-editor" placeholder="Start writing..." spellcheck="false"></textarea>
+    </main>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>
