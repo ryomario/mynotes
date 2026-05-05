@@ -26,3 +26,18 @@ export function getRelativeTime(timestamp: number): string {
   if (years === 1) return 'a year ago';
   return `${years} years ago`;
 }
+
+import type { Note } from '../storages/storage'
+
+export function getSortedNotes(notes: Note[]): Note[] {
+  return [...notes].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+
+    const orderA = a.order ?? 0;
+    const orderB = b.order ?? 0;
+    if (orderA !== orderB) return orderB - orderA;
+
+    return b.updatedAt - a.updatedAt;
+  });
+}

@@ -14,6 +14,7 @@ export interface StorageAdapter {
   getNotes(): Promise<Note[]>;
   saveNote(note: Note): Promise<void>;
   deleteNote(id: string): Promise<void>;
+  clearAll(): Promise<void>;
 }
 
 export function getStorageAdapter(): StorageAdapter {

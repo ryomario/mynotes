@@ -24,4 +24,8 @@ export class LocalStorageAdapter implements StorageAdapter {
         const filtered = notes.filter(n => n.id !== id);
         localStorage.setItem(this.key, JSON.stringify(filtered));
     }
+
+    async clearAll(): Promise<void> {
+        localStorage.removeItem(this.key);
+    }
 }

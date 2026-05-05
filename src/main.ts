@@ -1,7 +1,7 @@
 import './style.css'
 import { getStorageAdapter } from './storages/storage'
 import type { Note } from './storages/storage'
-import { getTitle, getRelativeTime } from './utils/noteUtils'
+import { getTitle, getRelativeTime, getSortedNotes } from './utils/noteUtils'
 
 const storage = getStorageAdapter();
 const notesList = document.getElementById('notes-list') as HTMLElement;
@@ -22,14 +22,24 @@ const fontSizeRange = document.getElementById('font-size-range') as HTMLInputEle
 const fontSizeValue = document.getElementById('font-size-value') as HTMLElement;
 const fontFamilySelect = document.getElementById('font-family-select') as HTMLSelectElement;
 const colorBtns = document.querySelectorAll('.color-btn');
+const rememberNoteToggle = document.getElementById('remember-note-toggle') as HTMLInputElement;
 
 async function init() {
   notes = await storage.getNotes();
   loadSettings();
   renderNotesList();
 
+  const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
   if (notes.length > 0) {
-    selectNote(notes[0].id);
+    const lastNoteId = settings.rememberLastNote ? settings.lastNoteId : null;
+    const noteToSelect = lastNoteId ? notes.find(n => n.id === lastNoteId) : null;
+
+    if (noteToSelect) {
+      selectNote(noteToSelect.id);
+    } else {
+      const sorted = getSortedNotes(notes);
+      selectNote(sorted[0].id);
+    }
   } else {
     createNewNote();
   }
@@ -67,6 +77,11 @@ function loadSettings() {
     colorBtns.forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-color') === settings.color);
     });
+  }
+
+  // Remember Last Note
+  if (settings.rememberLastNote !== undefined) {
+    rememberNoteToggle.checked = settings.rememberLastNote;
   }
 }
 
@@ -111,21 +126,67 @@ colorBtns.forEach(btn => {
   });
 });
 
+rememberNoteToggle.addEventListener('change', (e) => {
+  const val = (e.target as HTMLInputElement).checked;
+  saveSettings('rememberLastNote', val);
+  if (val && activeNoteId) {
+    saveSettings('lastNoteId', activeNoteId);
+  }
+});
+
+// Data Logic
+const exportBtn = document.getElementById('export-btn') as HTMLButtonElement;
+const importBtn = document.getElementById('import-btn') as HTMLButtonElement;
+const importInput = document.getElementById('import-input') as HTMLInputElement;
+
+exportBtn.addEventListener('click', async () => {
+  const data = await storage.getNotes();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mynotes_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener('click', () => importInput.click());
+
+importInput.addEventListener('change', async (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const content = event.target?.result as string;
+      const importedNotes = JSON.parse(content);
+
+      if (Array.isArray(importedNotes) && confirm('This will replace all current notes. Continue?')) {
+        await storage.clearAll();
+        for (const note of importedNotes) {
+          await storage.saveNote(note);
+        }
+        // Reload page to refresh all state
+        window.location.reload();
+      } else if (!Array.isArray(importedNotes)) {
+        alert('Invalid data format. Please import a valid MyNotes JSON file.');
+      }
+    } catch (err) {
+      console.error('Import failed:', err);
+      alert('Failed to import data. Please check the file format.');
+    }
+    importInput.value = ''; // Reset input
+  };
+  reader.readAsText(file);
+});
+
 // Original App Logic (modified for brevity or kept as is)
 function renderNotesList() {
   notesList.innerHTML = '';
 
   // Sort by pinned (true first), then order (desc), then updatedAt (desc)
-  const sortedNotes = [...notes].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-
-    const orderA = a.order ?? 0;
-    const orderB = b.order ?? 0;
-    if (orderA !== orderB) return orderB - orderA;
-
-    return b.updatedAt - a.updatedAt;
-  });
+  const sortedNotes = getSortedNotes(notes);
 
   sortedNotes.forEach(note => {
     const title = getTitle(note.content);
@@ -319,6 +380,11 @@ function selectNote(id: string) {
 
     const newItem = notesList.querySelector(`[data-id="${id}"]`);
     newItem?.classList.add('active');
+
+    const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
+    if (settings.rememberLastNote) {
+      saveSettings('lastNoteId', id);
+    }
   }
 }
 

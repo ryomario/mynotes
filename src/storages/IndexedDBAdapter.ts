@@ -50,4 +50,15 @@ export class IndexedDBAdapter implements StorageAdapter {
             request.onerror = () => reject(request.error);
         });
     }
+
+    async clearAll(): Promise<void> {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(this.storeName, 'readwrite');
+            const store = transaction.objectStore(this.storeName);
+            const request = store.clear();
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
 }
