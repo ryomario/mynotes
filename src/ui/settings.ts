@@ -20,10 +20,11 @@ export function loadSettings() {
   const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
 
   // Dark Mode
-  if (settings.darkMode === false) {
+  const isDark = settings.darkMode !== undefined ? settings.darkMode : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (!isDark) {
     document.documentElement.classList.add('light-mode');
-    darkModeToggle.checked = false;
   }
+  darkModeToggle.checked = isDark;
 
   // Font Size
   if (settings.fontSize) {

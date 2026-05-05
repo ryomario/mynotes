@@ -14,6 +14,7 @@ export default defineConfig(({ mode }): UserConfig => {
     const isSingle = env.VITE_SINGLE_FILE === 'true'
 
     return {
+        base: './',
         plugins: [
             ...(isSingle ? [viteSingleFile()] : [])
         ],

@@ -5,28 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Notes</title>
-  <script>
-    (function() {
-      try {
-        var settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
-        if (settings.darkMode === false) {
-          document.documentElement.classList.add('light-mode');
-        }
-        if (settings.fontSize) {
-          document.documentElement.style.setProperty('--editor-font-size', settings.fontSize + 'px');
-        }
-        if (settings.fontFamily) {
-          var font = settings.fontFamily === 'Serif' ? 'Georgia, serif' :
-                     settings.fontFamily === 'Mono' ? 'monospace' :
-                     "'Inter', sans-serif";
-          document.documentElement.style.setProperty('--editor-font-family', font);
-        }
-        if (settings.color) {
-          document.documentElement.style.setProperty('--editor-text-color', settings.color);
-        }
-      } catch (e) {}
-    })();
-  </script>
+  <script src="/theme.js"></script>
   <link rel="stylesheet" href="/src/style.css">
 </head>
 

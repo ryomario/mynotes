@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "MyNotes - New Tab",
+  "version": "1.0",
+  "description": "A beautiful local-first notes app that replaces your new tab.",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  }
+}
