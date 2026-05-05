@@ -297,3 +297,15 @@ body {
 .note-item {
   animation: fadeIn 0.4s ease-out forwards;
 }
+
+.note-item.dragging {
+  opacity: 0.5;
+  background: var(--selection-bg);
+  border: 1px dashed var(--accent);
+}
+
+.note-item.drag-over {
+  border-top: 2px solid var(--accent);
+  background: rgba(56, 189, 248, 0.1);
+  transform: translateY(2px);
+}

@@ -11,6 +11,7 @@ const addNoteBtn = document.getElementById('add-note-btn') as HTMLButtonElement;
 let notes: Note[] = [];
 let activeNoteId: string | null = null;
 let activeDropdownId: string | null = null;
+let draggedItemId: string | null = null;
 
 async function init() {
   notes = await storage.getNotes();
@@ -25,10 +26,16 @@ async function init() {
 
 function renderNotesList() {
   notesList.innerHTML = '';
-
+  
+  // Sort by pinned (true first), then order (desc), then updatedAt (desc)
   const sortedNotes = [...notes].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
+    
+    const orderA = a.order ?? 0;
+    const orderB = b.order ?? 0;
+    if (orderA !== orderB) return orderB - orderA;
+    
     return b.updatedAt - a.updatedAt;
   });
 
@@ -36,10 +43,11 @@ function renderNotesList() {
     const title = getTitle(note.content);
     const relativeTime = getRelativeTime(note.updatedAt);
     const fullDate = new Date(note.updatedAt).toLocaleString();
-
+    
     const div = document.createElement('div');
     div.dataset.id = note.id;
     div.className = `note-item ${note.id === activeNoteId ? 'active' : ''} ${note.pinned ? 'pinned' : ''} ${activeDropdownId === note.id ? 'dropdown-active' : ''}`;
+    div.draggable = true;
     div.innerHTML = `
       <div class="note-info">
         <div class="note-title">${title || 'Untitled Note'}</div>
@@ -74,6 +82,39 @@ function renderNotesList() {
         </div>
       </div>
     `;
+    
+    // Drag and Drop Events
+    div.addEventListener('dragstart', (e) => {
+      draggedItemId = note.id;
+      div.classList.add('dragging');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+      }
+    });
+
+    div.addEventListener('dragend', () => {
+      div.classList.remove('dragging');
+      draggedItemId = null;
+      document.querySelectorAll('.note-item').forEach(el => el.classList.remove('drag-over'));
+    });
+
+    div.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (draggedItemId && draggedItemId !== note.id) {
+        div.classList.add('drag-over');
+      }
+    });
+
+    div.addEventListener('dragleave', () => {
+      div.classList.remove('drag-over');
+    });
+
+    div.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      if (draggedItemId && draggedItemId !== note.id) {
+        await reorderNotes(draggedItemId, note.id);
+      }
+    });
 
     div.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
@@ -112,9 +153,28 @@ function renderNotesList() {
   });
 }
 
+async function reorderNotes(draggedId: string, targetId: string) {
+  const draggedIndex = notes.findIndex(n => n.id === draggedId);
+  const targetIndex = notes.findIndex(n => n.id === targetId);
+  
+  if (draggedIndex !== -1 && targetIndex !== -1) {
+    const [draggedItem] = notes.splice(draggedIndex, 1);
+    notes.splice(targetIndex, 0, draggedItem);
+    
+    // Update order values for all notes (top-down)
+    // Higher order = appears higher in the list (since we sort desc)
+    notes.forEach((note, index) => {
+      note.order = notes.length - index;
+      storage.saveNote(note);
+    });
+    
+    renderNotesList();
+  }
+}
+
 function toggleDropdown(id: string) {
   const previousId = activeDropdownId;
-
+  
   if (activeDropdownId === id) {
     activeDropdownId = null;
   } else {
@@ -153,7 +213,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-
 function selectNote(id: string) {
   if (activeNoteId === id && notesList.querySelector(`.note-item.active[data-id="${id}"]`)) return;
 
@@ -165,7 +224,6 @@ function selectNote(id: string) {
     noteEditor.value = note.content;
     noteEditor.readOnly = !!note.locked;
     
-    // Update Sidebar Item highlighting directly
     if (previousId) {
       const prevItem = notesList.querySelector(`[data-id="${previousId}"]`);
       prevItem?.classList.remove('active');
@@ -177,12 +235,14 @@ function selectNote(id: string) {
 }
 
 async function createNewNote() {
+  const maxOrder = notes.length > 0 ? Math.max(...notes.map(n => n.order ?? 0)) : 0;
   const newNote: Note = {
     id: crypto.randomUUID(),
     content: '',
     updatedAt: Date.now(),
     pinned: false,
-    locked: false
+    locked: false,
+    order: maxOrder + 1
   };
   notes.unshift(newNote);
   activeNoteId = newNote.id;
@@ -205,7 +265,6 @@ async function saveCurrentNote() {
     if (needToRenderList) {
       renderNotesList();
     } else {
-      // Update date directly in DOM if list is not re-rendered
       const noteItem = notesList.querySelector(`[data-id="${note.id}"]`);
       if (noteItem) {
         const dateEl = noteItem.querySelector('.note-date') as HTMLElement;
@@ -231,22 +290,18 @@ async function toggleLock(id: string) {
   if (note) {
     note.locked = !note.locked;
     
-    // Update Editor if active
     if (activeNoteId === id) {
       noteEditor.readOnly = note.locked;
     }
 
-    // Update Sidebar Item directly
     const noteItem = notesList.querySelector(`[data-id="${id}"]`);
     if (noteItem) {
-      // Update Lock Icon in Info
       const dateEl = noteItem.querySelector('.note-date') as HTMLElement;
       if (dateEl) {
         const relativeTime = getRelativeTime(note.updatedAt);
         dateEl.innerHTML = `${relativeTime} ${note.locked ? '🔒' : ''}`;
       }
 
-      // Update Lock Button in Dropdown
       const lockBtn = noteItem.querySelector('.lock-btn') as HTMLButtonElement;
       if (lockBtn) {
         const lockIcon = lockBtn.querySelector('path') as SVGPathElement;
@@ -282,14 +337,12 @@ async function deleteNote(id: string) {
 // Event Listeners
 addNoteBtn.addEventListener('click', createNewNote);
 
-// Debounced save for better performance
 let saveTimeout: number;
 noteEditor.addEventListener('input', () => {
   clearTimeout(saveTimeout);
   saveTimeout = window.setTimeout(saveCurrentNote, 300);
 });
 
-// Poll to update relative time in the sidebar every 30 seconds
 setInterval(() => {
   const noteItems = notesList.querySelectorAll('.note-item');
   noteItems.forEach(item => {
@@ -299,7 +352,6 @@ setInterval(() => {
       const dateEl = item.querySelector('.note-date') as HTMLElement;
       if (dateEl) {
         const relativeTime = getRelativeTime(note.updatedAt);
-        // Preserve the lock icon if present
         dateEl.innerHTML = `${relativeTime} ${note.locked ? '🔒' : ''}`;
       }
     }

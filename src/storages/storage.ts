@@ -7,6 +7,7 @@ export interface Note {
   updatedAt: number;
   pinned?: boolean;
   locked?: boolean;
+  order?: number;
 }
 
 export interface StorageAdapter {
