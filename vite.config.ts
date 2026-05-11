@@ -35,6 +35,10 @@ export default defineConfig(({ mode }): UserConfig => {
             },
 
             rollupOptions: {
+                input: {
+                    main: 'index.html',
+                    bookmarks: 'bookmarks.html'
+                },
                 output: {
                     // ⚠️ jangan isi manualChunks kalau mau disable
                     ...(isSingle ? {} : {
