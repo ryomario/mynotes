@@ -1,4 +1,5 @@
-import { addBookmark, addBookmarkFolder, bookmarkState, getVisibleBookmarks, setActiveFolder, setSearchQuery, toggleFolderCollapse, updateBookmark, updateBookmarkSettings, updateBookmarkThumbnail } from './state';
+import { addBookmark, addBookmarkFolder, bookmarkState, getVisibleBookmarks, setActiveFolder, setSearchQuery, toggleFolderCollapse, updateBookmark, updateBookmarkThumbnail } from './state';
+import { getBookmarkSettings, initBookmarkSettings, loadBookmarkSettings } from './settings';
 
 const folderListEl = document.getElementById('bookmark-folders') as HTMLElement;
 const gridEl = document.getElementById('bookmarks-grid') as HTMLElement;
@@ -12,12 +13,7 @@ const bookmarkTitleInput = document.getElementById('bookmark-title-input') as HT
 const bookmarkUrlInput = document.getElementById('bookmark-url-input') as HTMLInputElement;
 const bookmarkThumbInput = document.getElementById('bookmark-thumb-input') as HTMLInputElement;
 const bookmarkFolderInput = document.getElementById('bookmark-folder-input') as HTMLSelectElement;
-const settingsBtn = document.getElementById('bookmarks-settings-btn') as HTMLButtonElement;
-const settingsSidebar = document.getElementById('bookmarks-settings-sidebar') as HTMLElement;
-const settingsCloseBtn = document.getElementById('bookmarks-settings-close') as HTMLButtonElement;
 const defaultFolderSelect = document.getElementById('settings-default-folder') as HTMLSelectElement;
-const openNewTabToggle = document.getElementById('settings-open-new-tab') as HTMLInputElement;
-const showUrlToggle = document.getElementById('settings-show-url') as HTMLInputElement;
 const addFolderBtn = document.getElementById('add-folder-btn') as HTMLButtonElement;
 const folderModalBackdrop = document.getElementById('folder-modal-backdrop') as HTMLElement;
 const folderModalCloseBtn = document.getElementById('folder-modal-close') as HTMLButtonElement;
@@ -33,26 +29,11 @@ let editingBookmarkId: string | null = null;
 export function initBookmarksUI() {
   renderFolders();
   renderFolderOptions();
-  syncSettingsControls();
+  loadBookmarkSettings();
+  initBookmarkSettings(() => {
+    renderGrid();
+  });
   renderGrid();
-
-  settingsBtn.addEventListener('click', () => settingsSidebar.classList.add('show'));
-  settingsCloseBtn.addEventListener('click', () => settingsSidebar.classList.remove('show'));
-
-  defaultFolderSelect.addEventListener('change', () => {
-    updateBookmarkSettings({ defaultFolderId: defaultFolderSelect.value });
-    syncSettingsControls();
-  });
-
-  openNewTabToggle.addEventListener('change', () => {
-    updateBookmarkSettings({ openNewBookmarkInNewTab: openNewTabToggle.checked });
-    renderGrid();
-  });
-
-  showUrlToggle.addEventListener('change', () => {
-    updateBookmarkSettings({ showUrlInCard: showUrlToggle.checked });
-    renderGrid();
-  });
 
   addFolderBtn.addEventListener('click', openFolderModal);
   folderModalCloseBtn.addEventListener('click', closeFolderModal);
@@ -152,9 +133,9 @@ function renderFolderOptions() {
   defaultFolderSelect.innerHTML = '';
   folderParentInput.innerHTML = '<option value="">No parent (root)</option>';
 
-  const settings = bookmarkState.settings;
+  const settings = getBookmarkSettings();
   const fallback = bookmarkState.folders.find(folder => folder.id !== 'all')?.id ?? 'all';
-  const selectedBySetting = settings?.defaultFolderId ?? fallback;
+  const selectedBySetting = settings.defaultFolderId ?? fallback;
 
   const roots = bookmarkState.folders.filter(folder => folder.id !== 'all' && !folder.parentId);
   const ordered: Array<{ id: string; name: string; level: number }> = [];
@@ -195,17 +176,6 @@ function renderFolderOptions() {
   if (defaultFolderSelect.options.length > 0) {
     defaultFolderSelect.value = selectedBySetting;
   }
-}
-
-function syncSettingsControls() {
-  const settings = bookmarkState.settings;
-  if (!settings) return;
-
-  if (defaultFolderSelect.options.length > 0) {
-    defaultFolderSelect.value = settings.defaultFolderId;
-  }
-  openNewTabToggle.checked = settings.openNewBookmarkInNewTab;
-  showUrlToggle.checked = settings.showUrlInCard;
 }
 
 function renderFolders() {
@@ -326,9 +296,10 @@ function renderGrid() {
           </svg>
         </div>`;
 
-    const openInNewTab = bookmarkState.settings?.openNewBookmarkInNewTab ?? true;
+    const settings = getBookmarkSettings();
+    const openInNewTab = settings.openNewBookmarkInNewTab ?? true;
     const targetAttr = openInNewTab ? 'target="_blank" rel="noopener noreferrer"' : '';
-    const showUrl = bookmarkState.settings?.showUrlInCard ?? true;
+    const showUrl = settings.showUrlInCard ?? true;
 
     card.innerHTML = `
       <a class="bookmark-card-link" href="${bookmark.url}" ${targetAttr}>
@@ -410,7 +381,8 @@ function openBookmarkModal(mode: 'create' | 'edit' = 'create', bookmarkId?: stri
   } else {
     const modalTitle = document.getElementById('bookmark-modal-title');
     if (modalTitle) modalTitle.textContent = 'Tambah Bookmark';
-    const defaultFolderId = bookmarkState.settings?.defaultFolderId
+    const settings = getBookmarkSettings();
+    const defaultFolderId = settings.defaultFolderId
       ?? bookmarkState.folders.find(f => f.id !== 'all')?.id
       ?? '';
     if (defaultFolderId) {

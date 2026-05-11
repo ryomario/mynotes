@@ -1,5 +1,6 @@
 import { IndexedDBAdapter } from "./IndexedDBAdapter";
 import { LocalStorageAdapter } from "./LocalStorageAdapter";
+import { ChromeApiAdapter } from "./ChromeApiAdapter";
 
 export interface Note {
   id: string;
@@ -25,11 +26,7 @@ export interface BookmarkFolder {
   parentId?: string | null;
 }
 
-export interface BookmarkSettings {
-  defaultFolderId: string;
-  openNewBookmarkInNewTab: boolean;
-  showUrlInCard: boolean;
-}
+
 
 export interface StorageAdapter {
   getNotes(): Promise<Note[]>;
@@ -40,8 +37,6 @@ export interface StorageAdapter {
   saveBookmarks(bookmarks: Bookmark[]): Promise<void>;
   getBookmarkFolders(): Promise<BookmarkFolder[]>;
   saveBookmarkFolders(folders: BookmarkFolder[]): Promise<void>;
-  getBookmarkSettings(): Promise<BookmarkSettings | null>;
-  saveBookmarkSettings(settings: BookmarkSettings): Promise<void>;
 }
 
 export function getStorageAdapter(): StorageAdapter {
@@ -49,6 +44,9 @@ export function getStorageAdapter(): StorageAdapter {
   console.log(`Using storage adapter: ${type}`);
   if (type === 'indexedDB') {
     return new IndexedDBAdapter();
+  }
+  if (type === 'chrome-api') {
+    return new ChromeApiAdapter();
   }
   return new LocalStorageAdapter();
 }

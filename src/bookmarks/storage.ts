@@ -1,4 +1,4 @@
-import type { Bookmark, BookmarkFolder, BookmarkSettings } from './types';
+import type { Bookmark, BookmarkFolder } from './types';
 import { getStorageAdapter } from '../storages/storage';
 
 const storage = getStorageAdapter();
@@ -58,35 +58,4 @@ export async function loadBookmarks(): Promise<Bookmark[]> {
 
 export async function saveBookmarks(bookmarks: Bookmark[]) {
   await storage.saveBookmarks(bookmarks);
-}
-
-export function getDefaultBookmarkSettings(folders: BookmarkFolder[]): BookmarkSettings {
-  const firstFolder = folders.find(f => f.id !== 'all')?.id ?? 'all';
-  return {
-    defaultFolderId: firstFolder,
-    openNewBookmarkInNewTab: true,
-    showUrlInCard: true
-  };
-}
-
-export async function loadBookmarkSettings(folders: BookmarkFolder[]): Promise<BookmarkSettings> {
-  const fallback = getDefaultBookmarkSettings(folders);
-  const parsed = await storage.getBookmarkSettings();
-  if (!parsed) {
-    await storage.saveBookmarkSettings(fallback);
-    return fallback;
-  }
-
-  const hasFolder = folders.some(f => f.id === parsed.defaultFolderId && f.id !== 'all');
-  const settings: BookmarkSettings = {
-    defaultFolderId: hasFolder ? parsed.defaultFolderId : fallback.defaultFolderId,
-    openNewBookmarkInNewTab: parsed.openNewBookmarkInNewTab ?? true,
-    showUrlInCard: parsed.showUrlInCard ?? true
-  };
-  await storage.saveBookmarkSettings(settings);
-  return settings;
-}
-
-export async function saveBookmarkSettings(settings: BookmarkSettings) {
-  await storage.saveBookmarkSettings(settings);
 }

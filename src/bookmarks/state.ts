@@ -1,10 +1,10 @@
-import { loadBookmarkSettings, loadBookmarks, loadFolders, saveBookmarks, saveBookmarkSettings, saveFolders } from './storage';
-import type { Bookmark, BookmarkFolder, BookmarkSettings } from './types';
+import { loadBookmarks, loadFolders, saveBookmarks, saveFolders } from './storage';
+import { getBookmarkSettings } from './settings';
+import type { Bookmark, BookmarkFolder } from './types';
 
 export const bookmarkState = {
   folders: [] as BookmarkFolder[],
   bookmarks: [] as Bookmark[],
-  settings: null as BookmarkSettings | null,
   collapsedFolderIds: new Set<string>(),
   activeFolderId: 'all',
   query: ''
@@ -13,16 +13,6 @@ export const bookmarkState = {
 export async function initBookmarkState() {
   bookmarkState.folders = await loadFolders();
   bookmarkState.bookmarks = await loadBookmarks();
-  bookmarkState.settings = await loadBookmarkSettings(bookmarkState.folders);
-}
-
-export function updateBookmarkSettings(patch: Partial<BookmarkSettings>) {
-  if (!bookmarkState.settings) return;
-  bookmarkState.settings = {
-    ...bookmarkState.settings,
-    ...patch
-  };
-  void saveBookmarkSettings(bookmarkState.settings);
 }
 
 export function setActiveFolder(folderId: string) {
@@ -73,7 +63,8 @@ export function updateBookmarkThumbnail(id: string, thumbnail: string) {
 }
 
 export function addBookmark(payload: { title: string; url: string; thumbnail?: string; folderId?: string }) {
-  const fallbackFolder = bookmarkState.folders.find(f => f.id !== 'all')?.id ?? 'all';
+  const settings = getBookmarkSettings();
+  const fallbackFolder = settings.defaultFolderId || bookmarkState.folders.find(f => f.id !== 'all')?.id || 'all';
   const folderId = payload.folderId
     ?? (bookmarkState.activeFolderId === 'all' ? fallbackFolder : bookmarkState.activeFolderId);
 

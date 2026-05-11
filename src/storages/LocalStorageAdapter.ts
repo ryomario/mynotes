@@ -1,10 +1,9 @@
-import type { StorageAdapter, Note, Bookmark, BookmarkFolder, BookmarkSettings } from "./storage";
+import type { StorageAdapter, Note, Bookmark, BookmarkFolder } from "./storage";
 
 export class LocalStorageAdapter implements StorageAdapter {
     private notesKey = 'mynotes_data';
     private bookmarksKey = 'mynotes_bookmarks';
     private bookmarkFoldersKey = 'mynotes_bookmark_folders';
-    private bookmarkSettingsKey = 'mynotes_bookmark_settings';
 
     async getNotes(): Promise<Note[]> {
         const data = localStorage.getItem(this.notesKey);
@@ -48,14 +47,5 @@ export class LocalStorageAdapter implements StorageAdapter {
 
     async saveBookmarkFolders(folders: BookmarkFolder[]): Promise<void> {
         localStorage.setItem(this.bookmarkFoldersKey, JSON.stringify(folders));
-    }
-
-    async getBookmarkSettings(): Promise<BookmarkSettings | null> {
-        const data = localStorage.getItem(this.bookmarkSettingsKey);
-        return data ? JSON.parse(data) : null;
-    }
-
-    async saveBookmarkSettings(settings: BookmarkSettings): Promise<void> {
-        localStorage.setItem(this.bookmarkSettingsKey, JSON.stringify(settings));
     }
 }

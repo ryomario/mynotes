@@ -1,4 +1,4 @@
-import type { StorageAdapter, Note, Bookmark, BookmarkFolder, BookmarkSettings } from "./storage";
+import type { StorageAdapter, Note, Bookmark, BookmarkFolder } from "./storage";
 
 export class IndexedDBAdapter implements StorageAdapter {
     private dbName = 'NotesDB';
@@ -6,7 +6,6 @@ export class IndexedDBAdapter implements StorageAdapter {
     private notesStore = 'notes';
     private bookmarksStore = 'bookmarks';
     private bookmarkFoldersStore = 'bookmark_folders';
-    private bookmarkSettingsStore = 'bookmark_settings';
 
     private async getDB(): Promise<IDBDatabase> {
         return new Promise((resolve, reject) => {
@@ -16,7 +15,6 @@ export class IndexedDBAdapter implements StorageAdapter {
                 if (!db.objectStoreNames.contains(this.notesStore)) db.createObjectStore(this.notesStore, { keyPath: 'id' });
                 if (!db.objectStoreNames.contains(this.bookmarksStore)) db.createObjectStore(this.bookmarksStore, { keyPath: 'id' });
                 if (!db.objectStoreNames.contains(this.bookmarkFoldersStore)) db.createObjectStore(this.bookmarkFoldersStore, { keyPath: 'id' });
-                if (!db.objectStoreNames.contains(this.bookmarkSettingsStore)) db.createObjectStore(this.bookmarkSettingsStore, { keyPath: 'id' });
             };
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
@@ -114,26 +112,6 @@ export class IndexedDBAdapter implements StorageAdapter {
                 tx.oncomplete = () => resolve();
                 tx.onerror = () => reject(tx.error);
             };
-        });
-    }
-
-    async getBookmarkSettings(): Promise<BookmarkSettings | null> {
-        const db = await this.getDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.bookmarkSettingsStore, 'readonly');
-            const request = tx.objectStore(this.bookmarkSettingsStore).get('global');
-            request.onsuccess = () => resolve((request.result?.value as BookmarkSettings | undefined) ?? null);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async saveBookmarkSettings(settings: BookmarkSettings): Promise<void> {
-        const db = await this.getDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.bookmarkSettingsStore, 'readwrite');
-            const request = tx.objectStore(this.bookmarkSettingsStore).put({ id: 'global', value: settings });
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
         });
     }
 }

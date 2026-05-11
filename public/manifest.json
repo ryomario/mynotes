@@ -5,5 +5,6 @@
   "description": "A beautiful local-first notes app that replaces your new tab.",
   "chrome_url_overrides": {
     "newtab": "index.html"
-  }
+  },
+  "permissions": ["bookmarks"]
 }
