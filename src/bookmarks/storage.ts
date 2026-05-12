@@ -4,7 +4,6 @@ import { getStorageAdapter } from '../storages/storage';
 const storage = getStorageAdapter();
 
 const defaultFolders: BookmarkFolder[] = [
-  { id: 'all', name: 'All Bookmarks', parentId: null },
   { id: 'favorites', name: 'Favorites', parentId: null },
   { id: 'work', name: 'Work', parentId: null }
 ];
@@ -29,33 +28,46 @@ const defaultBookmarks: Bookmark[] = [
 export async function loadFolders(): Promise<BookmarkFolder[]> {
   const parsed = await storage.getBookmarkFolders();
   if (!parsed || parsed.length === 0) {
-    await storage.saveBookmarkFolders(defaultFolders);
+    for (const folder of defaultFolders) {
+      await storage.saveBookmarkFolder(folder);
+    }
     return defaultFolders;
   }
 
-  const normalized = parsed.map(folder => ({
-    ...folder,
-    parentId: folder.id === 'all' ? null : (folder.parentId ?? null)
-  }));
-  const hasAll = normalized.some(f => f.id === 'all');
-  const finalFolders = hasAll ? normalized : [defaultFolders[0], ...normalized];
-  await storage.saveBookmarkFolders(finalFolders);
-  return finalFolders;
+  const normalized = parsed
+    .filter(f => f.id !== 'all')
+    .map(folder => ({
+      ...folder,
+      parentId: folder.parentId ?? null
+    }));
+
+  return normalized;
 }
 
-export async function saveFolders(folders: BookmarkFolder[]) {
-  await storage.saveBookmarkFolders(folders);
+export async function saveFolder(folder: BookmarkFolder) {
+  if (folder.id === 'all') return;
+  await storage.saveBookmarkFolder(folder);
 }
 
 export async function loadBookmarks(): Promise<Bookmark[]> {
   const parsed = await storage.getBookmarks();
   if (!parsed || parsed.length === 0) {
-    await storage.saveBookmarks(defaultBookmarks);
+    for (const bookmark of defaultBookmarks) {
+      await storage.saveBookmark(bookmark);
+    }
     return defaultBookmarks;
   }
   return parsed;
 }
 
-export async function saveBookmarks(bookmarks: Bookmark[]) {
-  await storage.saveBookmarks(bookmarks);
+export async function saveBookmark(bookmark: Bookmark) {
+  await storage.saveBookmark(bookmark);
+}
+
+export async function removeBookmark(id: string) {
+  await storage.deleteBookmark(id);
+}
+
+export async function removeBookmarks(ids: string[]) {
+  await storage.deleteBookmarks(ids);
 }

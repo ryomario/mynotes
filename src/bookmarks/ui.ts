@@ -1,4 +1,4 @@
-import { addBookmark, addBookmarkFolder, bookmarkState, getVisibleBookmarks, setActiveFolder, setSearchQuery, toggleFolderCollapse, updateBookmark, updateBookmarkThumbnail } from './state';
+import { addBookmark, addBookmarkFolder, bookmarkState, getVisibleBookmarks, setActiveFolder, setSearchQuery, toggleFolderCollapse, updateBookmark, updateBookmarkThumbnail, deleteBookmarkAction, deleteBookmarksAction } from './state';
 import { getBookmarkSettings, initBookmarkSettings, loadBookmarkSettings } from './settings';
 
 const folderListEl = document.getElementById('bookmark-folders') as HTMLElement;
@@ -25,6 +25,8 @@ const folderParentInput = document.getElementById('folder-parent-input') as HTML
 let thumbnailTargetId: string | null = null;
 let modalMode: 'create' | 'edit' = 'create';
 let editingBookmarkId: string | null = null;
+let isSelectionMode = false;
+let selectedBookmarkIds = new Set<string>();
 
 export function initBookmarksUI() {
   renderFolders();
@@ -34,6 +36,17 @@ export function initBookmarksUI() {
     renderGrid();
   });
   renderGrid();
+
+  const mainEl = document.querySelector('.bookmarks-main');
+  if (mainEl) {
+    mainEl.addEventListener('scroll', () => {
+      renderGrid();
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    renderGrid();
+  });
 
   addFolderBtn.addEventListener('click', openFolderModal);
   folderModalCloseBtn.addEventListener('click', closeFolderModal);
@@ -199,11 +212,11 @@ function createFolderBranch(folder: { id: string; name: string; parentId?: strin
   wrap.appendChild(createFolderNode(folder, level));
 
   const children = bookmarkState.folders.filter(f => f.parentId === folder.id);
-  const isCollapsed = bookmarkState.collapsedFolderIds.has(folder.id);
+  const isExpanded = bookmarkState.expandedFolderIds.has(folder.id);
 
   if (children.length > 0) {
     const childrenWrap = document.createElement('div');
-    childrenWrap.className = `folder-children ${isCollapsed ? 'collapsed' : ''}`;
+    childrenWrap.className = `folder-children ${isExpanded ? '' : 'collapsed'}`;
     children.forEach(child => childrenWrap.appendChild(createFolderBranch(child, level + 1)));
     wrap.appendChild(childrenWrap);
   }
@@ -217,7 +230,7 @@ function createFolderNode(folder: { id: string; name: string; parentId?: string 
     : bookmarkState.bookmarks.filter(b => b.folderId === folder.id).length;
 
   const hasChildren = bookmarkState.folders.some(f => f.parentId === folder.id);
-  const isCollapsed = bookmarkState.collapsedFolderIds.has(folder.id);
+  const isExpanded = bookmarkState.expandedFolderIds.has(folder.id);
 
   const row = document.createElement('div');
   row.className = `folder-item ${folder.id === bookmarkState.activeFolderId ? 'active' : ''}`;
@@ -226,7 +239,7 @@ function createFolderNode(folder: { id: string; name: string; parentId?: string 
   const toggle = document.createElement('button');
   toggle.className = `folder-toggle ${hasChildren ? '' : 'empty'}`;
   toggle.type = 'button';
-  toggle.textContent = hasChildren ? (isCollapsed ? '▸' : '▾') : '';
+  toggle.textContent = hasChildren ? (isExpanded ? '▾' : '▸') : '';
   toggle.addEventListener('click', (e) => {
     e.stopPropagation();
     if (!hasChildren) return;
@@ -253,6 +266,13 @@ function createFolderNode(folder: { id: string; name: string; parentId?: string 
 
   row.addEventListener('click', () => {
     setActiveFolder(folder.id);
+    setSearchQuery('');
+    const searchInput = document.getElementById('bookmark-search') as HTMLInputElement;
+    if (searchInput) searchInput.value = '';
+
+    const mainEl = document.querySelector('.bookmarks-main');
+    if (mainEl) mainEl.scrollTo({ top: 0 });
+
     renderFolders();
     renderGrid();
   });
@@ -262,44 +282,121 @@ function createFolderNode(folder: { id: string; name: string; parentId?: string 
 
 function renderGrid() {
   const visible = getVisibleBookmarks();
-  gridEl.innerHTML = '';
+  const mainEl = document.querySelector('.bookmarks-main') as HTMLElement;
+  if (!mainEl) return;
 
-  if (visible.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'bookmarks-empty';
-    empty.textContent = 'No bookmarks found.';
-    gridEl.appendChild(empty);
+  const containerWidth = gridEl.clientWidth;
+  const itemMinWidth = 230;
+  const gap = 16;
+  const columns = Math.max(1, Math.floor((containerWidth + gap) / (itemMinWidth + gap)));
+  const itemWidth = (containerWidth - (columns - 1) * gap) / columns;
+  const settings = getBookmarkSettings();
+  const showUrl = settings.showUrlInCard ?? true;
+  const itemHeight = showUrl ? 200 : 174;
+
+  // Header & Selection UI
+  const toolbarEl = document.querySelector('.bookmarks-toolbar');
+  if (toolbarEl) {
+    let selectionUI = toolbarEl.querySelector('.selection-ui');
+    if (isSelectionMode) {
+      if (!selectionUI) {
+        selectionUI = document.createElement('div');
+        selectionUI.className = 'selection-ui';
+        toolbarEl.appendChild(selectionUI);
+      }
+      const allSelected = visible.length > 0 && selectedBookmarkIds.size === visible.length;
+      selectionUI.innerHTML = `
+        <span class="selection-count">${selectedBookmarkIds.size} selected</span>
+        <button class="btn-action select-all-btn">${allSelected ? 'Deselect All' : 'Select All'}</button>
+        <button class="btn-action primary delete-selected-btn" style="background: #ef4444; color: white;">Delete Selected</button>
+        <button class="btn-action cancel-selection-btn">Cancel</button>
+      `;
+      selectionUI.querySelector('.select-all-btn')?.addEventListener('click', () => {
+        if (allSelected) {
+          selectedBookmarkIds.clear();
+          isSelectionMode = false;
+        } else {
+          visible.forEach(b => selectedBookmarkIds.add(b.id));
+        }
+        renderGrid();
+      });
+      selectionUI.querySelector('.cancel-selection-btn')?.addEventListener('click', () => {
+        isSelectionMode = false;
+        selectedBookmarkIds.clear();
+        renderGrid();
+      });
+      selectionUI.querySelector('.delete-selected-btn')?.addEventListener('click', () => {
+        if (selectedBookmarkIds.size === 0) return;
+        if (confirm(`Delete ${selectedBookmarkIds.size} bookmarks?`)) {
+          deleteBookmarksAction(Array.from(selectedBookmarkIds));
+          isSelectionMode = false;
+          selectedBookmarkIds.clear();
+          renderFolders();
+          renderGrid();
+        }
+      });
+    } else {
+      if (selectionUI) selectionUI.remove();
+    }
   }
 
-  const addCard = document.createElement('article');
-  addCard.className = 'bookmark-card bookmark-add-card';
-  addCard.innerHTML = `
-    <button class="bookmark-add-btn" type="button">
-      <span class="bookmark-add-icon">&plus;</span>
-      <span>Tambah Bookmark</span>
-    </button>
-  `;
-  addCard.querySelector('.bookmark-add-btn')?.addEventListener('click', () => openBookmarkModal('create'));
-  gridEl.appendChild(addCard);
+  // Virtualization
+  const scrollTop = mainEl.scrollTop;
+  const viewportHeight = mainEl.clientHeight;
 
-  if (visible.length === 0) return;
+  // Adjusted to include "Add Bookmark" card at the start
+  const totalItems = visible.length + 1;
+  const totalRows = Math.ceil(totalItems / columns);
+  const totalHeight = totalRows * (itemHeight + gap) - gap;
 
-  visible.forEach(bookmark => {
+  gridEl.style.height = `${totalHeight}px`;
+  gridEl.innerHTML = '';
+
+  const startRow = Math.max(0, Math.floor((scrollTop - 100) / (itemHeight + gap)));
+  const endRow = Math.ceil((scrollTop + viewportHeight + 100) / (itemHeight + gap));
+
+  const startIndex = startRow * columns;
+  const endIndex = Math.min(totalItems, endRow * columns);
+
+  for (let i = startIndex; i < endIndex; i++) {
+    const row = Math.floor(i / columns);
+    const col = i % columns;
+    const x = col * (itemWidth + gap);
+    const y = row * (itemHeight + gap);
+
     const card = document.createElement('article');
     card.className = 'bookmark-card';
+    card.style.position = 'absolute';
+    card.style.width = `${itemWidth}px`;
+    card.style.height = `${itemHeight}px`;
+    card.style.left = `${x}px`;
+    card.style.top = `${y}px`;
 
+    if (i === 0) {
+      // Add Bookmark Card
+      card.className += ' bookmark-add-card';
+      card.innerHTML = `
+        <button class="bookmark-add-btn" type="button">
+          <span class="bookmark-add-icon">&plus;</span>
+          <span>Tambah Bookmark</span>
+        </button>
+      `;
+      card.querySelector('.bookmark-add-btn')?.addEventListener('click', () => openBookmarkModal('create'));
+      gridEl.appendChild(card);
+      continue;
+    }
+
+    const bookmark = visible[i - 1];
     const thumbnail = bookmark.thumbnail
-      ? `<img src="${bookmark.thumbnail}" alt="${bookmark.title}" class="bookmark-thumb" />`
+      ? `<img src="${bookmark.thumbnail}" alt="${bookmark.title}" class="bookmark-thumb" loading="lazy" />`
       : `<div class="bookmark-thumb placeholder">
           <svg viewBox="0 0 24 24" width="34" height="34">
             <path fill="currentColor" d="M14,3V4H18V18H6V4H10V3H5V19H19V3H14M12,6L16,10H13V14H11V10H8L12,6Z"/>
           </svg>
         </div>`;
 
-    const settings = getBookmarkSettings();
     const openInNewTab = settings.openNewBookmarkInNewTab ?? true;
     const targetAttr = openInNewTab ? 'target="_blank" rel="noopener noreferrer"' : '';
-    const showUrl = settings.showUrlInCard ?? true;
 
     card.innerHTML = `
       <a class="bookmark-card-link" href="${bookmark.url}" ${targetAttr}>
@@ -311,15 +408,34 @@ function renderGrid() {
       </a>
       <button class="bookmark-menu-btn" title="Bookmark actions">⋮</button>
       <div class="bookmark-menu">
+        <button class="bookmark-menu-item select-bookmark">Select</button>
         <button class="bookmark-menu-item edit-bookmark">Edit</button>
         <button class="bookmark-menu-item upload-thumb">Ubah thumbnail</button>
+        <button class="bookmark-menu-item delete-bookmark" style="color: #ef4444;">Delete</button>
       </div>
     `;
+
+    const link = card.querySelector('.bookmark-card-link') as HTMLAnchorElement;
+    if (isSelectionMode) {
+      card.classList.toggle('selected', selectedBookmarkIds.has(bookmark.id));
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (selectedBookmarkIds.has(bookmark.id)) {
+          selectedBookmarkIds.delete(bookmark.id);
+        } else {
+          selectedBookmarkIds.add(bookmark.id);
+        }
+        if (selectedBookmarkIds.size === 0) isSelectionMode = false;
+        renderGrid();
+      });
+    }
 
     const menuBtn = card.querySelector('.bookmark-menu-btn') as HTMLButtonElement;
     const menu = card.querySelector('.bookmark-menu') as HTMLDivElement;
     const uploadBtn = card.querySelector('.upload-thumb') as HTMLButtonElement;
     const editBtn = card.querySelector('.edit-bookmark') as HTMLButtonElement;
+    const selectBtn = card.querySelector('.select-bookmark') as HTMLButtonElement;
+    const deleteBtn = card.querySelector('.delete-bookmark') as HTMLButtonElement;
 
     menuBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -343,8 +459,33 @@ function renderGrid() {
       thumbnailInput.click();
     });
 
+    selectBtn.addEventListener('click', () => {
+      menu.classList.remove('show');
+      card.classList.remove('menu-open');
+      isSelectionMode = true;
+      selectedBookmarkIds.add(bookmark.id);
+      renderGrid();
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      menu.classList.remove('show');
+      card.classList.remove('menu-open');
+      if (confirm('Delete this bookmark?')) {
+        deleteBookmarkAction(bookmark.id);
+        renderFolders();
+        renderGrid();
+      }
+    });
+
     gridEl.appendChild(card);
-  });
+  }
+
+  if (visible.length === 0 && startIndex === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'bookmarks-empty';
+    empty.textContent = 'No bookmarks found.';
+    gridEl.appendChild(empty);
+  }
 }
 
 function closeAllMenus() {

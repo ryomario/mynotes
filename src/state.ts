@@ -23,7 +23,7 @@ export async function deleteNote(id: string): Promise<void> {
 }
 
 export async function clearAllNotes(): Promise<void> {
-  await storage.clearAll();
+  await storage.clearAllNotes();
   state.notes = [];
 }
 

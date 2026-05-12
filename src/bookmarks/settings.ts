@@ -1,4 +1,5 @@
 import type { BookmarkSettings } from './types';
+import { generateDummyBookmarks } from './state';
 
 // Settings Elements
 const settingsBtn = document.getElementById('bookmarks-settings-btn') as HTMLButtonElement;
@@ -7,6 +8,12 @@ const settingsCloseBtn = document.getElementById('bookmarks-settings-close') as 
 const defaultFolderSelect = document.getElementById('settings-default-folder') as HTMLSelectElement;
 const openNewTabToggle = document.getElementById('settings-open-new-tab') as HTMLInputElement;
 const showUrlToggle = document.getElementById('settings-show-url') as HTMLInputElement;
+const seedBtn = document.getElementById('settings-seed-btn') as HTMLButtonElement;
+const devToolsSection = document.getElementById('settings-dev-tools');
+
+if (devToolsSection && !import.meta.env.DEV) {
+  devToolsSection.style.display = 'none';
+}
 
 const STORAGE_KEY = 'mynotes_bookmark_settings';
 
@@ -73,6 +80,24 @@ export function initBookmarkSettings(onSettingsChange?: () => void) {
     showUrlToggle.addEventListener('change', () => {
       saveBookmarkSetting('showUrlInCard', showUrlToggle.checked);
       if (onSettingsChange) onSettingsChange();
+    });
+  }
+
+  if (seedBtn) {
+    seedBtn.addEventListener('click', async () => {
+      if (confirm('Generate 50 dummy bookmarks for testing?')) {
+        seedBtn.disabled = true;
+        const originalText = seedBtn.innerText;
+        seedBtn.innerText = 'Generating...';
+        
+        await generateDummyBookmarks(50);
+        
+        seedBtn.innerText = originalText;
+        seedBtn.disabled = false;
+        
+        if (onSettingsChange) onSettingsChange();
+        alert('Generated 50 dummy bookmarks!');
+      }
     });
   }
 }

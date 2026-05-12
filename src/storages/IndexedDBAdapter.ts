@@ -54,7 +54,7 @@ export class IndexedDBAdapter implements StorageAdapter {
         });
     }
 
-    async clearAll(): Promise<void> {
+    async clearAllNotes(): Promise<void> {
         const db = await this.getDB();
         return new Promise((resolve, reject) => {
             const transaction = db.transaction(this.notesStore, 'readwrite');
@@ -75,18 +75,48 @@ export class IndexedDBAdapter implements StorageAdapter {
         });
     }
 
-    async saveBookmarks(bookmarks: Bookmark[]): Promise<void> {
+    async saveBookmark(bookmark: Bookmark): Promise<void> {
         const db = await this.getDB();
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.bookmarksStore, 'readwrite');
             const store = tx.objectStore(this.bookmarksStore);
-            const clearReq = store.clear();
-            clearReq.onerror = () => reject(clearReq.error);
-            clearReq.onsuccess = () => {
-                bookmarks.forEach(b => store.put(b));
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            };
+            const request = store.put(bookmark);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async deleteBookmark(id: string): Promise<void> {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(this.bookmarksStore, 'readwrite');
+            const store = transaction.objectStore(this.bookmarksStore);
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async deleteBookmarks(ids: string[]): Promise<void> {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(this.bookmarksStore, 'readwrite');
+            const store = transaction.objectStore(this.bookmarksStore);
+            let errors = 0;
+            let completed = 0;
+            if (ids.length === 0) return resolve();
+            
+            ids.forEach(id => {
+                const request = store.delete(id);
+                request.onsuccess = () => {
+                    completed++;
+                    if (completed === ids.length) resolve();
+                };
+                request.onerror = () => {
+                    errors++;
+                    if (errors + completed === ids.length) reject(request.error);
+                };
+            });
         });
     }
 
@@ -100,18 +130,14 @@ export class IndexedDBAdapter implements StorageAdapter {
         });
     }
 
-    async saveBookmarkFolders(folders: BookmarkFolder[]): Promise<void> {
+    async saveBookmarkFolder(folder: BookmarkFolder): Promise<void> {
         const db = await this.getDB();
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.bookmarkFoldersStore, 'readwrite');
             const store = tx.objectStore(this.bookmarkFoldersStore);
-            const clearReq = store.clear();
-            clearReq.onerror = () => reject(clearReq.error);
-            clearReq.onsuccess = () => {
-                folders.forEach(f => store.put(f));
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            };
+            const request = store.put(folder);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
         });
     }
 }

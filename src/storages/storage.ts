@@ -32,11 +32,13 @@ export interface StorageAdapter {
   getNotes(): Promise<Note[]>;
   saveNote(note: Note): Promise<void>;
   deleteNote(id: string): Promise<void>;
-  clearAll(): Promise<void>;
+  clearAllNotes(): Promise<void>;
   getBookmarks(): Promise<Bookmark[]>;
-  saveBookmarks(bookmarks: Bookmark[]): Promise<void>;
+  deleteBookmark(id: string): Promise<void>;
+  deleteBookmarks(ids: string[]): Promise<void>;
+  saveBookmark(bookmark: Bookmark): Promise<void>;
   getBookmarkFolders(): Promise<BookmarkFolder[]>;
-  saveBookmarkFolders(folders: BookmarkFolder[]): Promise<void>;
+  saveBookmarkFolder(folder: BookmarkFolder): Promise<void>;
 }
 
 export function getStorageAdapter(): StorageAdapter {

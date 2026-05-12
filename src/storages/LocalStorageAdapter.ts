@@ -27,7 +27,7 @@ export class LocalStorageAdapter implements StorageAdapter {
         localStorage.setItem(this.notesKey, JSON.stringify(filtered));
     }
 
-    async clearAll(): Promise<void> {
+    async clearAllNotes(): Promise<void> {
         localStorage.removeItem(this.notesKey);
     }
 
@@ -36,8 +36,28 @@ export class LocalStorageAdapter implements StorageAdapter {
         return data ? JSON.parse(data) : [];
     }
 
-    async saveBookmarks(bookmarks: Bookmark[]): Promise<void> {
+    async saveBookmark(bookmark: Bookmark): Promise<void> {
+        const bookmarks = await this.getBookmarks();
+        const index = bookmarks.findIndex(b => b.id === bookmark.id);
+        if (index !== -1) {
+            bookmarks[index] = bookmark;
+        } else {
+            bookmarks.push(bookmark);
+        }
         localStorage.setItem(this.bookmarksKey, JSON.stringify(bookmarks));
+    }
+
+    async deleteBookmark(id: string): Promise<void> {
+        const bookmarks = await this.getBookmarks();
+        const filtered = bookmarks.filter(b => b.id !== id);
+        localStorage.setItem(this.bookmarksKey, JSON.stringify(filtered));
+    }
+
+    async deleteBookmarks(ids: string[]): Promise<void> {
+        const bookmarks = await this.getBookmarks();
+        const idSet = new Set(ids);
+        const filtered = bookmarks.filter(b => !idSet.has(b.id));
+        localStorage.setItem(this.bookmarksKey, JSON.stringify(filtered));
     }
 
     async getBookmarkFolders(): Promise<BookmarkFolder[]> {
@@ -45,7 +65,14 @@ export class LocalStorageAdapter implements StorageAdapter {
         return data ? JSON.parse(data) : [];
     }
 
-    async saveBookmarkFolders(folders: BookmarkFolder[]): Promise<void> {
+    async saveBookmarkFolder(folder: BookmarkFolder): Promise<void> {
+        const folders = await this.getBookmarkFolders();
+        const index = folders.findIndex(f => f.id === folder.id);
+        if (index !== -1) {
+            folders[index] = folder;
+        } else {
+            folders.push(folder);
+        }
         localStorage.setItem(this.bookmarkFoldersKey, JSON.stringify(folders));
     }
 }

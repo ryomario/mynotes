@@ -17,8 +17,8 @@ export class ChromeApiAdapter implements StorageAdapter {
     return this.notesAdapter.deleteNote(id);
   }
 
-  async clearAll(): Promise<void> {
-    return this.notesAdapter.clearAll();
+  async clearAllNotes(): Promise<void> {
+    return this.notesAdapter.clearAllNotes();
   }
 
   // Bookmarks: use chrome.bookmarks
@@ -51,11 +51,95 @@ export class ChromeApiAdapter implements StorageAdapter {
     });
   }
 
-  async saveBookmarks(bookmarks: Bookmark[]): Promise<void> {
-    // Note: chrome.bookmarks API is granular. 
-    // Implementing a full sync from a flat array back to a tree is complex.
-    // For now, we assume getBookmarks is the source of truth.
-    console.log('saveBookmarks called on ChromeApiAdapter', bookmarks);
+  async saveBookmark(bookmark: Bookmark): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.bookmarks) {
+      console.warn('Chrome Bookmarks API not available');
+      return;
+    }
+
+    return new Promise((resolve) => {
+      chrome.bookmarks.get(bookmark.id, (results) => {
+        if (chrome.runtime.lastError || !results || results.length === 0) {
+          void chrome.runtime.lastError; // Ignore error
+          let parentId = bookmark.folderId;
+          if (!parentId || parentId === '0' || parentId === 'all') {
+            parentId = '1'; // Default to Bookmarks Bar
+          }
+          chrome.bookmarks.create({
+            parentId,
+            title: bookmark.title,
+            url: bookmark.url
+          }, (created) => {
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError);
+              return resolve();
+            }
+            if (created) {
+              bookmark.id = created.id;
+              bookmark.folderId = created.parentId || '0';
+            }
+            resolve();
+          });
+        } else {
+          chrome.bookmarks.update(bookmark.id, {
+            title: bookmark.title,
+            url: bookmark.url
+          }, () => {
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError);
+              return resolve();
+            }
+            let targetParentId = bookmark.folderId;
+            if (!targetParentId || targetParentId === '0' || targetParentId === 'all') {
+              targetParentId = '1';
+            }
+            const existing = results[0];
+            if (existing.parentId !== targetParentId) {
+              chrome.bookmarks.move(bookmark.id, { parentId: targetParentId }, () => {
+                if (chrome.runtime.lastError) {
+                  console.error(chrome.runtime.lastError);
+                }
+                resolve();
+              });
+            } else {
+              resolve();
+            }
+          });
+        }
+      });
+    });
+  }
+
+  async deleteBookmark(id: string): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.bookmarks) {
+      console.warn('Chrome Bookmarks API not available');
+      return;
+    }
+    return new Promise((resolve) => {
+      chrome.bookmarks.remove(id, () => {
+        void chrome.runtime.lastError; // Ignore if not found
+        resolve();
+      });
+    });
+  }
+
+  async deleteBookmarks(ids: string[]): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.bookmarks) {
+      console.warn('Chrome Bookmarks API not available');
+      return;
+    }
+    if (ids.length === 0) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      let completed = 0;
+      ids.forEach(id => {
+        chrome.bookmarks.remove(id, () => {
+          void chrome.runtime.lastError;
+          completed++;
+          if (completed === ids.length) resolve();
+        });
+      });
+    });
   }
 
   async getBookmarkFolders(): Promise<BookmarkFolder[]> {
@@ -84,7 +168,60 @@ export class ChromeApiAdapter implements StorageAdapter {
     });
   }
 
-  async saveBookmarkFolders(folders: BookmarkFolder[]): Promise<void> {
-    console.log('saveBookmarkFolders called on ChromeApiAdapter', folders);
+  async saveBookmarkFolder(folder: BookmarkFolder): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.bookmarks) {
+      console.warn('Chrome Bookmarks API not available');
+      return;
+    }
+
+    return new Promise((resolve) => {
+      chrome.bookmarks.get(folder.id, (results) => {
+        if (chrome.runtime.lastError || !results || results.length === 0) {
+          void chrome.runtime.lastError;
+          let parentId = folder.parentId;
+          if (!parentId || parentId === '0' || parentId === 'all') {
+            parentId = '1';
+          }
+          chrome.bookmarks.create({
+            parentId,
+            title: folder.name
+          }, (created) => {
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError);
+              return resolve();
+            }
+            if (created) {
+              folder.id = created.id;
+              folder.parentId = created.parentId !== '0' ? created.parentId : null;
+            }
+            resolve();
+          });
+        } else {
+          chrome.bookmarks.update(folder.id, {
+            title: folder.name
+          }, () => {
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError);
+              return resolve();
+            }
+            let targetParentId = folder.parentId;
+            if (!targetParentId || targetParentId === '0' || targetParentId === 'all') {
+              targetParentId = '1';
+            }
+            const existing = results[0];
+            if (existing.parentId !== targetParentId) {
+              chrome.bookmarks.move(folder.id, { parentId: targetParentId }, () => {
+                if (chrome.runtime.lastError) {
+                  console.error(chrome.runtime.lastError);
+                }
+                resolve();
+              });
+            } else {
+              resolve();
+            }
+          });
+        }
+      });
+    });
   }
 }
