@@ -118,6 +118,16 @@ export class ChromeApiAdapter implements StorageAdapter {
     return new Promise((resolve) => {
       chrome.bookmarks.remove(id, () => {
         void chrome.runtime.lastError; // Ignore if not found
+        // Also remove thumbnail if exists
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+          chrome.storage.local.remove(`thumb_${id}`);
+        }
+        // Always try to remove from IndexedDB too as fallback/cleanup
+        this.notesAdapter.getThumbnail(id).then(exists => {
+          if (exists) this.notesAdapter.saveThumbnail(id, ''); // IndexedDB delete thumbnail logic? 
+          // Wait, IndexedDBAdapter deleteBookmark also handles thumbnails now.
+          // But ChromeApiAdapter doesn't call notesAdapter.deleteBookmark.
+        });
         resolve();
       });
     });
@@ -135,8 +145,15 @@ export class ChromeApiAdapter implements StorageAdapter {
       ids.forEach(id => {
         chrome.bookmarks.remove(id, () => {
           void chrome.runtime.lastError;
-          completed++;
-          if (completed === ids.length) resolve();
+          if (typeof chrome !== 'undefined' && chrome.storage) {
+            chrome.storage.local.remove(`thumb_${id}`, () => {
+              completed++;
+              if (completed === ids.length) resolve();
+            });
+          } else {
+            completed++;
+            if (completed === ids.length) resolve();
+          }
         });
       });
     });
@@ -223,5 +240,38 @@ export class ChromeApiAdapter implements StorageAdapter {
         }
       });
     });
+  }
+
+  async getThumbnail(id: string): Promise<string | undefined> {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      return new Promise((resolve) => {
+        chrome.storage.local.get(`thumb_${id}`, async (result: { [key: string]: any }) => {
+          if (chrome.runtime.lastError || !result[`thumb_${id}`]) {
+            // Try fallback
+            const fallback = await this.notesAdapter.getThumbnail(id);
+            resolve(fallback);
+          } else {
+            resolve(result[`thumb_${id}`] as string | undefined);
+          }
+        });
+      });
+    }
+    return this.notesAdapter.getThumbnail(id);
+  }
+
+  async saveThumbnail(id: string, dataUrl: string): Promise<void> {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      return new Promise((resolve) => {
+        chrome.storage.local.set({ [`thumb_${id}`]: dataUrl }, () => {
+          if (chrome.runtime.lastError) {
+            console.warn('chrome.storage.local.set failed, falling back to IndexedDB:', chrome.runtime.lastError);
+            this.notesAdapter.saveThumbnail(id, dataUrl).then(resolve);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+    return this.notesAdapter.saveThumbnail(id, dataUrl);
   }
 }

@@ -2,10 +2,11 @@ import type { StorageAdapter, Note, Bookmark, BookmarkFolder } from "./storage";
 
 export class IndexedDBAdapter implements StorageAdapter {
     private dbName = 'NotesDB';
-    private dbVersion = 2;
+    private dbVersion = 3;
     private notesStore = 'notes';
     private bookmarksStore = 'bookmarks';
     private bookmarkFoldersStore = 'bookmark_folders';
+    private bookmarkThumbnailsStore = 'bookmark_thumbnails';
 
     private async getDB(): Promise<IDBDatabase> {
         return new Promise((resolve, reject) => {
@@ -15,6 +16,7 @@ export class IndexedDBAdapter implements StorageAdapter {
                 if (!db.objectStoreNames.contains(this.notesStore)) db.createObjectStore(this.notesStore, { keyPath: 'id' });
                 if (!db.objectStoreNames.contains(this.bookmarksStore)) db.createObjectStore(this.bookmarksStore, { keyPath: 'id' });
                 if (!db.objectStoreNames.contains(this.bookmarkFoldersStore)) db.createObjectStore(this.bookmarkFoldersStore, { keyPath: 'id' });
+                if (!db.objectStoreNames.contains(this.bookmarkThumbnailsStore)) db.createObjectStore(this.bookmarkThumbnailsStore, { keyPath: 'id' });
             };
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
@@ -89,10 +91,15 @@ export class IndexedDBAdapter implements StorageAdapter {
     async deleteBookmark(id: string): Promise<void> {
         const db = await this.getDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(this.bookmarksStore, 'readwrite');
+            const transaction = db.transaction([this.bookmarksStore, this.bookmarkThumbnailsStore], 'readwrite');
             const store = transaction.objectStore(this.bookmarksStore);
+            const thumbStore = transaction.objectStore(this.bookmarkThumbnailsStore);
+            
             const request = store.delete(id);
-            request.onsuccess = () => resolve();
+            request.onsuccess = () => {
+                thumbStore.delete(id);
+                resolve();
+            };
             request.onerror = () => reject(request.error);
         });
     }
@@ -100,8 +107,9 @@ export class IndexedDBAdapter implements StorageAdapter {
     async deleteBookmarks(ids: string[]): Promise<void> {
         const db = await this.getDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(this.bookmarksStore, 'readwrite');
+            const transaction = db.transaction([this.bookmarksStore, this.bookmarkThumbnailsStore], 'readwrite');
             const store = transaction.objectStore(this.bookmarksStore);
+            const thumbStore = transaction.objectStore(this.bookmarkThumbnailsStore);
             let errors = 0;
             let completed = 0;
             if (ids.length === 0) return resolve();
@@ -109,6 +117,7 @@ export class IndexedDBAdapter implements StorageAdapter {
             ids.forEach(id => {
                 const request = store.delete(id);
                 request.onsuccess = () => {
+                    thumbStore.delete(id);
                     completed++;
                     if (completed === ids.length) resolve();
                 };
@@ -136,6 +145,28 @@ export class IndexedDBAdapter implements StorageAdapter {
             const tx = db.transaction(this.bookmarkFoldersStore, 'readwrite');
             const store = tx.objectStore(this.bookmarkFoldersStore);
             const request = store.put(folder);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getThumbnail(id: string): Promise<string | undefined> {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.bookmarkThumbnailsStore, 'readonly');
+            const store = tx.objectStore(this.bookmarkThumbnailsStore);
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result ? request.result.data : undefined);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async saveThumbnail(id: string, dataUrl: string): Promise<void> {
+        const db = await this.getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.bookmarkThumbnailsStore, 'readwrite');
+            const store = tx.objectStore(this.bookmarkThumbnailsStore);
+            const request = store.put({ id, data: dataUrl });
             request.onsuccess = () => resolve();
             request.onerror = () => reject(request.error);
         });

@@ -3,7 +3,6 @@ export interface Bookmark {
   title: string;
   url: string;
   folderId: string;
-  thumbnail?: string;
   createdAt: number;
 }
 

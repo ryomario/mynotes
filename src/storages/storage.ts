@@ -16,7 +16,6 @@ export interface Bookmark {
   title: string;
   url: string;
   folderId: string;
-  thumbnail?: string;
   createdAt: number;
 }
 
@@ -37,6 +36,8 @@ export interface StorageAdapter {
   deleteBookmark(id: string): Promise<void>;
   deleteBookmarks(ids: string[]): Promise<void>;
   saveBookmark(bookmark: Bookmark): Promise<void>;
+  getThumbnail(id: string): Promise<string | undefined>;
+  saveThumbnail(id: string, dataUrl: string): Promise<void>;
   getBookmarkFolders(): Promise<BookmarkFolder[]>;
   saveBookmarkFolder(folder: BookmarkFolder): Promise<void>;
 }

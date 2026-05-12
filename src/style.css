@@ -231,8 +231,12 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
-  overflow: hidden;
   position: relative;
+  transition: var(--transition);
+}
+
+.bookmark-card.menu-open {
+  z-index: 100;
 }
 
 .bookmark-add-card {
@@ -283,6 +287,7 @@ body {
   height: 130px;
   object-fit: cover;
   display: block;
+  border-radius: 11px 11px 0 0;
 }
 
 .bookmark-thumb.placeholder {
@@ -291,6 +296,7 @@ body {
   justify-content: center;
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.04);
+  border-radius: 11px 11px 0 0;
 }
 
 .bookmark-meta {

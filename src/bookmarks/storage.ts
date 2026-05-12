@@ -71,3 +71,11 @@ export async function removeBookmark(id: string) {
 export async function removeBookmarks(ids: string[]) {
   await storage.deleteBookmarks(ids);
 }
+
+export async function getThumbnail(id: string): Promise<string | undefined> {
+  return await storage.getThumbnail(id);
+}
+
+export async function saveThumbnail(id: string, dataUrl: string): Promise<void> {
+  await storage.saveThumbnail(id, dataUrl);
+}

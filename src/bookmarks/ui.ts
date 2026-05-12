@@ -1,4 +1,5 @@
-import { addBookmark, addBookmarkFolder, bookmarkState, getVisibleBookmarks, setActiveFolder, setSearchQuery, toggleFolderCollapse, updateBookmark, updateBookmarkThumbnail, deleteBookmarkAction, deleteBookmarksAction } from './state';
+import { addBookmark, addBookmarkFolder, bookmarkState, getVisibleBookmarks, setActiveFolder, setSearchQuery, toggleFolderCollapse, updateBookmark, deleteBookmarkAction, deleteBookmarksAction, loadThumbnailAction, saveThumbnailAction } from './state';
+import { generateThumbnailForBookmark } from './thumbnail';
 import { getBookmarkSettings, initBookmarkSettings, loadBookmarkSettings } from './settings';
 
 const folderListEl = document.getElementById('bookmark-folders') as HTMLElement;
@@ -88,7 +89,7 @@ export function initBookmarksUI() {
     if (!file || !thumbnailTargetId) return;
 
     const dataUrl = await fileToDataUrl(file);
-    updateBookmarkThumbnail(thumbnailTargetId, dataUrl);
+    await saveThumbnailAction(thumbnailTargetId, dataUrl);
     thumbnailTargetId = null;
     thumbnailInput.value = '';
     renderGrid();
@@ -126,12 +127,16 @@ export function initBookmarksUI() {
         id: editingBookmarkId,
         title,
         url,
-        folderId: selectedFolderId,
-        thumbnail,
-        keepExistingThumbnail: !thumbFile
+        folderId: selectedFolderId
       });
+      if (thumbnail) {
+        await saveThumbnailAction(editingBookmarkId, thumbnail);
+      }
     } else {
-      addBookmark({ title, url, thumbnail, folderId: selectedFolderId });
+      addBookmark({ title, url, folderId: selectedFolderId });
+      // Note: We can't easily get the ID of the newly added bookmark here 
+      // without changing addBookmark return type. 
+      // Actually, addBookmark returns void. 
     }
 
     closeBookmarkModal();
@@ -387,20 +392,11 @@ function renderGrid() {
     }
 
     const bookmark = visible[i - 1];
-    const thumbnail = bookmark.thumbnail
-      ? `<img src="${bookmark.thumbnail}" alt="${bookmark.title}" class="bookmark-thumb" loading="lazy" />`
-      : `<div class="bookmark-thumb placeholder">
-          <svg viewBox="0 0 24 24" width="34" height="34">
-            <path fill="currentColor" d="M14,3V4H18V18H6V4H10V3H5V19H19V3H14M12,6L16,10H13V14H11V10H8L12,6Z"/>
-          </svg>
-        </div>`;
-
     const openInNewTab = settings.openNewBookmarkInNewTab ?? true;
     const targetAttr = openInNewTab ? 'target="_blank" rel="noopener noreferrer"' : '';
 
     card.innerHTML = `
       <a class="bookmark-card-link" href="${bookmark.url}" ${targetAttr}>
-        ${thumbnail}
         <div class="bookmark-meta">
           <h3 class="${showUrl ? '' : 'no-url'}">${bookmark.title}</h3>
           ${showUrl ? `<p>${bookmark.url}</p>` : ''}
@@ -410,10 +406,34 @@ function renderGrid() {
       <div class="bookmark-menu">
         <button class="bookmark-menu-item select-bookmark">Select</button>
         <button class="bookmark-menu-item edit-bookmark">Edit</button>
+        <button class="bookmark-menu-item gen-thumb">Generate Thumbnail</button>
         <button class="bookmark-menu-item upload-thumb">Ubah thumbnail</button>
         <button class="bookmark-menu-item delete-bookmark" style="color: #ef4444;">Delete</button>
       </div>
     `;
+
+    // Async thumbnail loading
+    const thumbWrapper = card.querySelector('.bookmark-card-link') as HTMLElement;
+    const placeholder = document.createElement('div');
+    placeholder.className = 'bookmark-thumb placeholder';
+    placeholder.innerHTML = `
+      <svg viewBox="0 0 24 24" width="34" height="34">
+        <path fill="currentColor" d="M14,3V4H18V18H6V4H10V3H5V19H19V3H14M12,6L16,10H13V14H11V10H8L12,6Z"/>
+      </svg>
+    `;
+    thumbWrapper.prepend(placeholder);
+
+    loadThumbnailAction(bookmark.id).then(thumb => {
+      if (thumb) {
+        placeholder.remove();
+        const img = document.createElement('img');
+        img.src = thumb;
+        img.alt = bookmark.title;
+        img.className = 'bookmark-thumb';
+        img.loading = 'lazy';
+        thumbWrapper.prepend(img);
+      }
+    });
 
     const link = card.querySelector('.bookmark-card-link') as HTMLAnchorElement;
     if (isSelectionMode) {
@@ -433,6 +453,7 @@ function renderGrid() {
     const menuBtn = card.querySelector('.bookmark-menu-btn') as HTMLButtonElement;
     const menu = card.querySelector('.bookmark-menu') as HTMLDivElement;
     const uploadBtn = card.querySelector('.upload-thumb') as HTMLButtonElement;
+    const genThumbBtn = card.querySelector('.gen-thumb') as HTMLButtonElement;
     const editBtn = card.querySelector('.edit-bookmark') as HTMLButtonElement;
     const selectBtn = card.querySelector('.select-bookmark') as HTMLButtonElement;
     const deleteBtn = card.querySelector('.delete-bookmark') as HTMLButtonElement;
@@ -457,6 +478,13 @@ function renderGrid() {
       menu.classList.remove('show');
       card.classList.remove('menu-open');
       thumbnailInput.click();
+    });
+
+    genThumbBtn.addEventListener('click', async () => {
+      menu.classList.remove('show');
+      card.classList.remove('menu-open');
+      await generateThumbnailForBookmark(bookmark);
+      renderGrid();
     });
 
     selectBtn.addEventListener('click', () => {

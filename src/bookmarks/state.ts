@@ -1,4 +1,4 @@
-import { loadBookmarks, loadFolders, saveBookmark, saveFolder, removeBookmark, removeBookmarks } from './storage';
+import { loadBookmarks, loadFolders, saveBookmark, saveFolder, removeBookmark, removeBookmarks, getThumbnail, saveThumbnail } from './storage';
 import { getBookmarkSettings } from './settings';
 import type { Bookmark, BookmarkFolder } from './types';
 
@@ -6,6 +6,7 @@ export const bookmarkState = {
   folders: [] as BookmarkFolder[],
   bookmarks: [] as Bookmark[],
   expandedFolderIds: new Set<string>(),
+  thumbnailCache: new Map<string, string>(),
   activeFolderId: 'all',
   query: ''
 };
@@ -59,14 +60,23 @@ export function getVisibleBookmarks(): Bookmark[] {
   );
 }
 
-export function updateBookmarkThumbnail(id: string, thumbnail: string) {
-  const bookmark = bookmarkState.bookmarks.find(b => b.id === id);
-  if (!bookmark) return;
-  bookmark.thumbnail = thumbnail;
-  void saveBookmark(bookmark);
+export async function saveThumbnailAction(id: string, dataUrl: string) {
+  bookmarkState.thumbnailCache.set(id, dataUrl);
+  await saveThumbnail(id, dataUrl);
 }
 
-export function addBookmark(payload: { title: string; url: string; thumbnail?: string; folderId?: string }) {
+export async function loadThumbnailAction(id: string): Promise<string | undefined> {
+  if (bookmarkState.thumbnailCache.has(id)) {
+    return bookmarkState.thumbnailCache.get(id);
+  }
+  const thumb = await getThumbnail(id);
+  if (thumb) {
+    bookmarkState.thumbnailCache.set(id, thumb);
+  }
+  return thumb;
+}
+
+export function addBookmark(payload: { title: string; url: string; folderId?: string }) {
   const settings = getBookmarkSettings();
   const fallbackFolder = settings.defaultFolderId || bookmarkState.folders.find(f => f.id !== 'all')?.id || 'all';
   const folderId = payload.folderId
@@ -77,7 +87,6 @@ export function addBookmark(payload: { title: string; url: string; thumbnail?: s
     title: payload.title.trim(),
     url: payload.url.trim(),
     folderId,
-    thumbnail: payload.thumbnail,
     createdAt: Date.now()
   };
   bookmarkState.bookmarks.unshift(bookmark);
@@ -90,8 +99,6 @@ export function updateBookmark(payload: {
   title: string;
   url: string;
   folderId?: string;
-  thumbnail?: string;
-  keepExistingThumbnail?: boolean;
 }) {
   const bookmark = bookmarkState.bookmarks.find(b => b.id === payload.id);
   if (!bookmark) return;
@@ -101,12 +108,6 @@ export function updateBookmark(payload: {
 
   if (payload.folderId) {
     bookmark.folderId = payload.folderId;
-  }
-
-  if (payload.keepExistingThumbnail) {
-    // no-op
-  } else {
-    bookmark.thumbnail = payload.thumbnail;
   }
 
   void saveBookmark(bookmark);

@@ -75,4 +75,12 @@ export class LocalStorageAdapter implements StorageAdapter {
         }
         localStorage.setItem(this.bookmarkFoldersKey, JSON.stringify(folders));
     }
+
+    async getThumbnail(_id: string): Promise<string | undefined> {
+        return undefined;
+    }
+
+    async saveThumbnail(_id: string, _dataUrl: string): Promise<void> {
+        // Do nothing for localStorage to avoid hitting storage limits
+    }
 }

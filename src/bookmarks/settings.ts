@@ -1,5 +1,6 @@
 import type { BookmarkSettings } from './types';
-import { generateDummyBookmarks } from './state';
+import { generateDummyBookmarks, bookmarkState } from './state';
+import { batchGenerateThumbnails } from './thumbnail';
 
 // Settings Elements
 const settingsBtn = document.getElementById('bookmarks-settings-btn') as HTMLButtonElement;
@@ -9,10 +10,11 @@ const defaultFolderSelect = document.getElementById('settings-default-folder') a
 const openNewTabToggle = document.getElementById('settings-open-new-tab') as HTMLInputElement;
 const showUrlToggle = document.getElementById('settings-show-url') as HTMLInputElement;
 const seedBtn = document.getElementById('settings-seed-btn') as HTMLButtonElement;
-const devToolsSection = document.getElementById('settings-dev-tools');
+const genThumbnailsBtn = document.getElementById('settings-gen-thumbnails-btn') as HTMLButtonElement;
+const seedBtnSection = document.getElementById('settings-seed-btn');
 
-if (devToolsSection && !import.meta.env.DEV) {
-  devToolsSection.style.display = 'none';
+if (seedBtnSection && !import.meta.env.DEV) {
+  seedBtnSection.style.display = 'none';
 }
 
 const STORAGE_KEY = 'mynotes_bookmark_settings';
@@ -89,14 +91,40 @@ export function initBookmarkSettings(onSettingsChange?: () => void) {
         seedBtn.disabled = true;
         const originalText = seedBtn.innerText;
         seedBtn.innerText = 'Generating...';
-        
+
         await generateDummyBookmarks(50);
-        
+
         seedBtn.innerText = originalText;
         seedBtn.disabled = false;
-        
+
         if (onSettingsChange) onSettingsChange();
         alert('Generated 50 dummy bookmarks!');
+      }
+    });
+  }
+
+  if (genThumbnailsBtn) {
+    genThumbnailsBtn.addEventListener('click', async () => {
+      const bookmarks = bookmarkState.bookmarks;
+      if (bookmarks.length === 0) {
+        alert('No bookmarks to generate thumbnails for.');
+        return;
+      }
+
+      if (confirm(`Generate thumbnails for ${bookmarks.length} bookmarks? This may take a while.`)) {
+        genThumbnailsBtn.disabled = true;
+        const originalText = genThumbnailsBtn.innerText;
+        genThumbnailsBtn.innerText = 'Generating...';
+
+        await batchGenerateThumbnails(bookmarks, (count) => {
+          genThumbnailsBtn.innerText = `Generating (${count}/${bookmarks.length})...`;
+        });
+
+        genThumbnailsBtn.innerText = originalText;
+        genThumbnailsBtn.disabled = false;
+
+        if (onSettingsChange) onSettingsChange();
+        alert('Thumbnail generation complete!');
       }
     });
   }
