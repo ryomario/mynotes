@@ -299,6 +299,23 @@ body {
   border-radius: 11px 11px 0 0;
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.bookmark-thumb.generating {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.1) 37%, rgba(255, 255, 255, 0.04) 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+  color: var(--accent) !important;
+}
+
 .bookmark-meta {
   padding: 12px;
 }
@@ -968,6 +985,20 @@ select option {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1.5s linear infinite;
 }
 
 .note-item {

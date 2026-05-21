@@ -1,25 +1,108 @@
 import type { Bookmark } from './types';
 import { saveThumbnailAction } from './state';
 
+async function resizeImageToDataURL(imageUrl: string, maxDim: number = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    // Only set crossOrigin for external HTTP/HTTPS URLs to avoid CORS issues
+    // or security policy blocks with chrome-extension:// or data: URLs
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      img.crossOrigin = 'anonymous';
+    }
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          throw new Error('Could not get 2d context');
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    img.onerror = () => {
+      reject(new Error(`Failed to load image: ${imageUrl}`));
+    };
+
+    img.src = imageUrl;
+  });
+}
+
 export async function fetchThumbnail(url: string): Promise<string> {
   const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime && !!chrome.runtime.id;
   const hasTabsApi = isExtension && !!chrome.windows && !!chrome.tabs;
 
+  let imageUrl = '';
   if (hasTabsApi) {
     try {
       console.log('Attempting Chrome API capture for:', url);
-      return await captureWithChromeAPI(url);
+      const dataUrl = await captureWithChromeAPI(url);
+      return await resizeImageToDataURL(dataUrl, 256);
     } catch (e: any) {
       console.error('Chrome API capture failed, falling back to Favicon API:', e);
-      return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=128`;
+      imageUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=256`;
+    }
+  } else {
+    console.error('Chrome API not available, using fallback for:', url);
+    if (isExtension) {
+      imageUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=256`;
+    } else {
+      // Use Microlink as the primary public screenshot API because it natively supports CORS
+      try {
+        console.log('Fetching screenshot from Microlink for:', url);
+        const res = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&screenshot=true&embed=screenshot`);
+        if (!res.ok) {
+          throw new Error(`Microlink returned status ${res.status}`);
+        }
+        const data = await res.json() as { url?: string };
+        if (data && data.url) {
+          imageUrl = data.url;
+        } else {
+          throw new Error('Invalid response from Microlink');
+        }
+      } catch (err) {
+        console.warn('Microlink fetch failed, falling back to WordPress mshots:', err);
+        // Direct return WordPress mshots to avoid CORS console errors
+        return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=300`;
+      }
     }
   }
 
-  console.error('Chrome API not available, using fallback for:', url);
-  if (isExtension) {
-    return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=128`;
+  try {
+    return await resizeImageToDataURL(imageUrl, 256);
+  } catch (err) {
+    console.warn('Failed to load or resize primary fallback image:', err);
+
+    // Secondary fallback for non-extension environments (WordPress mshots)
+    // We return the URL directly, letting the browser's <img> tag render it safely without CORS restrictions.
+    if (!isExtension) {
+      const wpUrl = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=300`;
+      console.log('Falling back to WordPress mshots:', wpUrl);
+      return wpUrl;
+    }
+
+    return imageUrl;
   }
-  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=300`;
 }
 
 async function captureWithChromeAPI(url: string): Promise<string> {

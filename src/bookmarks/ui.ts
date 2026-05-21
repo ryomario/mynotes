@@ -483,6 +483,23 @@ function renderGrid() {
     genThumbBtn.addEventListener('click', async () => {
       menu.classList.remove('show');
       card.classList.remove('menu-open');
+
+      // Instantly show shimmering skeleton loading animation
+      const thumbWrapper = card.querySelector('.bookmark-card-link') as HTMLElement;
+      if (thumbWrapper) {
+        const existingThumb = thumbWrapper.querySelector('.bookmark-thumb');
+        if (existingThumb) {
+          const loadingPlaceholder = document.createElement('div');
+          loadingPlaceholder.className = 'bookmark-thumb placeholder generating';
+          loadingPlaceholder.innerHTML = `
+            <svg class="animate-spin" viewBox="0 0 24 24" width="34" height="34">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round" style="opacity: 0.25;"></circle>
+            </svg>
+          `;
+          existingThumb.replaceWith(loadingPlaceholder);
+        }
+      }
+
       await generateThumbnailForBookmark(bookmark);
       renderGrid();
     });
