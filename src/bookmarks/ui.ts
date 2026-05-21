@@ -229,10 +229,27 @@ function createFolderBranch(folder: { id: string; name: string; parentId?: strin
   return wrap;
 }
 
+function getAllDescendantFolderIds(folderId: string): string[] {
+  const ids: string[] = [];
+  const findChildren = (parent: string) => {
+    const children = bookmarkState.folders.filter(f => f.parentId === parent);
+    for (const child of children) {
+      ids.push(child.id);
+      findChildren(child.id);
+    }
+  };
+  findChildren(folderId);
+  return ids;
+}
+
 function createFolderNode(folder: { id: string; name: string; parentId?: string | null }, level: number): HTMLElement {
-  const count = folder.id === 'all'
-    ? bookmarkState.bookmarks.length
-    : bookmarkState.bookmarks.filter(b => b.folderId === folder.id).length;
+  let count = 0;
+  if (folder.id === 'all') {
+    count = bookmarkState.bookmarks.length;
+  } else {
+    const folderIds = [folder.id, ...getAllDescendantFolderIds(folder.id)];
+    count = bookmarkState.bookmarks.filter(b => b.folderId && folderIds.includes(b.folderId)).length;
+  }
 
   const hasChildren = bookmarkState.folders.some(f => f.parentId === folder.id);
   const isExpanded = bookmarkState.expandedFolderIds.has(folder.id);
