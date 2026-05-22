@@ -3,6 +3,8 @@ export function getTitle(content: string): string {
   return firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
 }
 
+import { t } from './i18n';
+
 export function getRelativeTime(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
@@ -14,17 +16,17 @@ export function getRelativeTime(timestamp: number): string {
   const months = Math.floor(days / 30);
   const years = Math.floor(months / 12);
 
-  if (seconds < 60) return 'just now';
-  if (minutes === 1) return 'a minute ago';
-  if (minutes < 60) return `${minutes} minutes ago`;
-  if (hours === 1) return 'an hour ago';
-  if (hours < 24) return `${hours} hours ago`;
-  if (days === 1) return 'yesterday';
-  if (days < 30) return `${days} days ago`;
-  if (months === 1) return 'a month ago';
-  if (months < 12) return `${months} months ago`;
-  if (years === 1) return 'a year ago';
-  return `${years} years ago`;
+  if (seconds < 60) return t('time_just_now');
+  if (minutes === 1) return t('time_a_minute_ago');
+  if (minutes < 60) return t('time_minutes_ago', { count: String(minutes) });
+  if (hours === 1) return t('time_an_hour_ago');
+  if (hours < 24) return t('time_hours_ago', { count: String(hours) });
+  if (days === 1) return t('time_yesterday');
+  if (days < 30) return t('time_days_ago', { count: String(days) });
+  if (months === 1) return t('time_a_month_ago');
+  if (months < 12) return t('time_months_ago', { count: String(months) });
+  if (years === 1) return t('time_a_year_ago');
+  return t('time_years_ago', { count: String(years) });
 }
 
 import type { Note } from '../storages/storage'

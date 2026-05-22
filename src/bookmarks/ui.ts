@@ -1,6 +1,7 @@
 import { addBookmark, addBookmarkFolder, bookmarkState, getVisibleBookmarks, setActiveFolder, setSearchQuery, toggleFolderCollapse, updateBookmark, deleteBookmarkAction, deleteBookmarksAction, loadThumbnailAction, saveThumbnailAction } from './state';
 import { generateThumbnailForBookmark } from './thumbnail';
 import { getBookmarkSettings, initBookmarkSettings, loadBookmarkSettings } from './settings';
+import { t } from '../utils/i18n';
 
 const folderListEl = document.getElementById('bookmark-folders') as HTMLElement;
 const gridEl = document.getElementById('bookmarks-grid') as HTMLElement;
@@ -328,10 +329,10 @@ function renderGrid() {
       }
       const allSelected = visible.length > 0 && selectedBookmarkIds.size === visible.length;
       selectionUI.innerHTML = `
-        <span class="selection-count">${selectedBookmarkIds.size} selected</span>
-        <button class="btn-action select-all-btn">${allSelected ? 'Deselect All' : 'Select All'}</button>
-        <button class="btn-action primary delete-selected-btn" style="background: #ef4444; color: white;">Delete Selected</button>
-        <button class="btn-action cancel-selection-btn">Cancel</button>
+        <span class="selection-count">${t('selected_count', { count: String(selectedBookmarkIds.size) })}</span>
+        <button class="btn-action select-all-btn">${allSelected ? t('deselect_all') : t('select_all')}</button>
+        <button class="btn-action primary delete-selected-btn" style="background: #ef4444; color: white;">${t('delete_selected')}</button>
+        <button class="btn-action cancel-selection-btn">${t('cancel_btn')}</button>
       `;
       selectionUI.querySelector('.select-all-btn')?.addEventListener('click', () => {
         if (allSelected) {
@@ -349,7 +350,7 @@ function renderGrid() {
       });
       selectionUI.querySelector('.delete-selected-btn')?.addEventListener('click', () => {
         if (selectedBookmarkIds.size === 0) return;
-        if (confirm(`Delete ${selectedBookmarkIds.size} bookmarks?`)) {
+        if (confirm(t('delete_multiple_confirm', { count: String(selectedBookmarkIds.size) }))) {
           deleteBookmarksAction(Array.from(selectedBookmarkIds));
           isSelectionMode = false;
           selectedBookmarkIds.clear();
@@ -395,12 +396,12 @@ function renderGrid() {
     card.style.top = `${y}px`;
 
     if (i === 0) {
-      // Add Bookmark Card
+      // Add Bookmark Card (localized)
       card.className += ' bookmark-add-card';
       card.innerHTML = `
         <button class="bookmark-add-btn" type="button">
           <span class="bookmark-add-icon">&plus;</span>
-          <span>Tambah Bookmark</span>
+          <span>${t('add_bookmark_title')}</span>
         </button>
       `;
       card.querySelector('.bookmark-add-btn')?.addEventListener('click', () => openBookmarkModal('create'));
@@ -421,11 +422,11 @@ function renderGrid() {
       </a>
       <button class="bookmark-menu-btn" title="Bookmark actions">⋮</button>
       <div class="bookmark-menu">
-        <button class="bookmark-menu-item select-bookmark">Select</button>
-        <button class="bookmark-menu-item edit-bookmark">Edit</button>
-        <button class="bookmark-menu-item gen-thumb">Generate Thumbnail</button>
-        <button class="bookmark-menu-item upload-thumb">Ubah thumbnail</button>
-        <button class="bookmark-menu-item delete-bookmark" style="color: #ef4444;">Delete</button>
+          <button class="bookmark-menu-item select-bookmark">${t('menu_select')}</button>
+          <button class="bookmark-menu-item edit-bookmark">${t('menu_edit')}</button>
+          <button class="bookmark-menu-item gen-thumb">${t('menu_gen_thumb')}</button>
+          <button class="bookmark-menu-item upload-thumb">${t('menu_change_thumb')}</button>
+          <button class="bookmark-menu-item delete-bookmark" style="color: #ef4444;">${t('menu_delete')}</button>
       </div>
     `;
 
@@ -532,7 +533,7 @@ function renderGrid() {
     deleteBtn.addEventListener('click', () => {
       menu.classList.remove('show');
       card.classList.remove('menu-open');
-      if (confirm('Delete this bookmark?')) {
+      if (confirm(t('delete_bookmark_confirm'))) {
         deleteBookmarkAction(bookmark.id);
         renderFolders();
         renderGrid();
@@ -545,7 +546,7 @@ function renderGrid() {
   if (visible.length === 0 && startIndex === 0) {
     const empty = document.createElement('div');
     empty.className = 'bookmarks-empty';
-    empty.textContent = 'No bookmarks found.';
+    empty.textContent = t('no_bookmarks_found');
     gridEl.appendChild(empty);
   }
 }

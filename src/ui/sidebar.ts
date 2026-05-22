@@ -3,6 +3,7 @@ import { getTitle, getRelativeTime, getSortedNotes } from '../utils/noteUtils';
 import { updateEditorContent, noteEditor } from './editor';
 import { saveSettings } from './settings';
 import type { Note } from '../storages/storage';
+import { t } from '../utils/i18n';
 
 export const notesList = document.getElementById('notes-list') as HTMLElement;
 
@@ -55,11 +56,11 @@ export function renderNotesList() {
     div.draggable = true;
     div.innerHTML = `
       <div class="note-info">
-        <div class="note-title">${title || 'Untitled Note'}</div>
+        <div class="note-title">${title || t('untitled_note')}</div>
         <div class="note-date" title="${fullDate}">${relativeTime} ${note.locked ? '🔒' : ''}</div>
       </div>
       <div class="note-options">
-        <button class="options-trigger" title="More options">
+        <button class="options-trigger" title="${t('more_options_tooltip')}">
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="currentColor" d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z" />
           </svg>
@@ -69,20 +70,20 @@ export function renderNotesList() {
             <svg viewBox="0 0 24 24" width="16" height="16">
               <path fill="currentColor" d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" />
             </svg>
-            ${note.pinned ? 'Unpin' : 'Pin'}
+            ${note.pinned ? t('unpin_label') : t('pin_label')}
           </button>
           <button class="dropdown-item lock-btn">
             <svg viewBox="0 0 24 24" width="16" height="16">
               <path fill="currentColor" d="${note.locked ? 'M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8,6A4,4 0 0,1 12,2A4,4 0 0,1 16,6V8H8V6Z' : 'M12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17A2,2 0 0,1 10,15A2,2 0 0,1 12,13M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8,6A4,4 0 0,1 12,2A4,4 0 0,1 16,6V8H8V6M18,20H6V10H18V20Z'}" />
             </svg>
-            ${note.locked ? 'Unlock' : 'Lock'}
+            ${note.locked ? t('unlock_label') : t('lock_label')}
           </button>
           <div class="dropdown-divider"></div>
           <button class="dropdown-item delete-btn danger">
             <svg viewBox="0 0 24 24" width="16" height="16">
               <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
             </svg>
-            Delete
+            ${t('delete_label')}
           </button>
         </div>
       </div>
@@ -265,7 +266,7 @@ async function toggleLock(id: string) {
           ? 'M12,17A2,2 0 0,0 14,15A2,2 0 0,0 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8,6A4,4 0 0,1 12,2A4,4 0 0,1 16,6V8H8V6Z'
           : 'M12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17A2,2 0 0,1 10,15A2,2 0 0,1 12,13M18,8H17V6A5,5 0 0,0 12,1A5,5 0 0,0 7,6V8H6A2,2 0 0,0 4,10V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V10A2,2 0 0,0 18,8M8,6A4,4 0 0,1 12,2A4,4 0 0,1 16,6V8H8V6M18,20H6V10H18V20Z';
         lockIcon.setAttribute('d', lockPath);
-        lockBtn.childNodes[lockBtn.childNodes.length - 1].textContent = ` ${note.locked ? 'Unlock' : 'Lock'}`;
+        lockBtn.childNodes[lockBtn.childNodes.length - 1].textContent = ` ${note.locked ? t('unlock_label') : t('lock_label')}`;
       }
     }
 
@@ -274,7 +275,7 @@ async function toggleLock(id: string) {
 }
 
 async function deleteNoteHandler(id: string) {
-  if (confirm('Are you sure you want to delete this note?')) {
+  if (confirm(t('delete_note_confirm'))) {
     await deleteNote(id);
     if (state.activeNoteId === id) {
       state.activeNoteId = state.notes.length > 0 ? state.notes[0].id : null;

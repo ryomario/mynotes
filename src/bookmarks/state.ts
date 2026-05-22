@@ -1,6 +1,7 @@
 import { loadBookmarks, loadFolders, saveBookmark, saveFolder, removeBookmark, removeBookmarks, getThumbnail, saveThumbnail } from './storage';
 import { getBookmarkSettings } from './settings';
 import type { Bookmark, BookmarkFolder } from './types';
+import { t } from '../utils/i18n';
 
 export const bookmarkState = {
   folders: [] as BookmarkFolder[],
@@ -14,7 +15,7 @@ export const bookmarkState = {
 export async function initBookmarkState() {
   const loadedFolders = await loadFolders();
   bookmarkState.folders = [
-    { id: 'all', name: 'All Bookmarks', parentId: null },
+    { id: 'all', name: t('all_bookmarks'), parentId: null },
     ...loadedFolders.filter(f => f.id !== 'all')
   ];
   bookmarkState.bookmarks = await loadBookmarks();

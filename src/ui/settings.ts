@@ -1,4 +1,5 @@
 import { state, clearAllNotes, saveNote, getNotesFromStorage } from '../state';
+import { t } from '../utils/i18n';
 
 // Settings Elements
 const settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement;
@@ -131,18 +132,18 @@ export function initSettings() {
         const content = event.target?.result as string;
         const importedNotes = JSON.parse(content);
 
-        if (Array.isArray(importedNotes) && confirm('This will replace all current notes. Continue?')) {
+        if (Array.isArray(importedNotes) && confirm(t('import_replace_confirm'))) {
           await clearAllNotes();
           for (const note of importedNotes) {
             await saveNote(note);
           }
           window.location.reload();
         } else if (!Array.isArray(importedNotes)) {
-          alert('Invalid data format. Please import a valid MyNotes JSON file.');
+          alert(t('import_invalid_format'));
         }
       } catch (err) {
         console.error('Import failed:', err);
-        alert('Failed to import data. Please check the file format.');
+        alert(t('import_failed'));
       }
       importInput.value = '';
     };

@@ -3,14 +3,24 @@ import { getSortedNotes } from './utils/noteUtils';
 import { initSettings, loadSettings } from './ui/settings';
 import { initSidebar, renderNotesList, selectNote } from './ui/sidebar';
 import { initEditor, createNewNote } from './ui/editor';
+import { translateDOM, createLanguageSelectorComponent } from './utils/i18n';
 
 async function init() {
+  // Initialize translations
+  translateDOM();
+
   // 1. Initialize core state (load from storage)
   await initNotes();
 
   // 2. Initialize and load settings
   initSettings();
   loadSettings();
+
+  // Inject language selector
+  const settingsSection = document.querySelector('#settings-sidebar .settings-content .settings-section');
+  if (settingsSection) {
+    settingsSection.appendChild(createLanguageSelectorComponent());
+  }
 
   // 3. Initialize UI modules
   initEditor();

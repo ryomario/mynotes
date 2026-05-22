@@ -1,6 +1,7 @@
 import type { BookmarkSettings } from './types';
 import { generateDummyBookmarks, bookmarkState } from './state';
 import { batchGenerateThumbnails } from './thumbnail';
+import { t } from '../utils/i18n';
 
 // Settings Elements
 const settingsBtn = document.getElementById('bookmarks-settings-btn') as HTMLButtonElement;
@@ -87,10 +88,10 @@ export function initBookmarkSettings(onSettingsChange?: () => void) {
 
   if (seedBtn) {
     seedBtn.addEventListener('click', async () => {
-      if (confirm('Generate 50 dummy bookmarks for testing?')) {
+      if (confirm(t('seed_dummy_confirm'))) {
         seedBtn.disabled = true;
         const originalText = seedBtn.innerText;
-        seedBtn.innerText = 'Generating...';
+        seedBtn.innerText = t('generating_label');
 
         await generateDummyBookmarks(50);
 
@@ -98,7 +99,7 @@ export function initBookmarkSettings(onSettingsChange?: () => void) {
         seedBtn.disabled = false;
 
         if (onSettingsChange) onSettingsChange();
-        alert('Generated 50 dummy bookmarks!');
+        alert(t('seed_dummy_success'));
       }
     });
   }
@@ -107,24 +108,24 @@ export function initBookmarkSettings(onSettingsChange?: () => void) {
     genThumbnailsBtn.addEventListener('click', async () => {
       const bookmarks = bookmarkState.bookmarks;
       if (bookmarks.length === 0) {
-        alert('No bookmarks to generate thumbnails for.');
+        alert(t('no_bookmarks_for_thumbs'));
         return;
       }
 
-      if (confirm(`Generate thumbnails for ${bookmarks.length} bookmarks? This may take a while.`)) {
+      if (confirm(t('gen_thumbs_confirm', { count: String(bookmarks.length) }))) {
         genThumbnailsBtn.disabled = true;
         const originalText = genThumbnailsBtn.innerText;
-        genThumbnailsBtn.innerText = 'Generating...';
+        genThumbnailsBtn.innerText = t('generating_label');
 
         await batchGenerateThumbnails(bookmarks, (count) => {
-          genThumbnailsBtn.innerText = `Generating (${count}/${bookmarks.length})...`;
+          genThumbnailsBtn.innerText = t('generating_progress', { count: String(count), total: String(bookmarks.length) });
         });
 
         genThumbnailsBtn.innerText = originalText;
         genThumbnailsBtn.disabled = false;
 
         if (onSettingsChange) onSettingsChange();
-        alert('Thumbnail generation complete!');
+        alert(t('gen_thumbs_success'));
       }
     });
   }
