@@ -4,16 +4,27 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "lint": "eslint src",
+    "test": "vitest",
     "dev": "vite --port 3000",
     "build": "tsc && vite build",
     "build:single": "vite build --mode single",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@eslint/css": "^1.2.0",
+    "@eslint/json": "^1.2.0",
     "@types/chrome": "^0.1.42",
+    "@typescript-eslint/parser": "^6.21.0",
     "esbuild": "^0.28.0",
+    "eslint": "^8.57.1",
+    "globals": "^17.0.0",
+    "jsdom": "^29.1.1",
+    "jsonc-eslint-parser": "^3.1.0",
     "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.4",
     "vite": "^8.0.10",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^1.5.0"
   }
 }

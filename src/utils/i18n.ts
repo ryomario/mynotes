@@ -30,7 +30,7 @@ export function getCurrentLanguage(): Language {
     if (settings.language === 'id' || settings.language === 'en') {
       return settings.language;
     }
-  } catch (e) {
+  } catch {
     // Ignore error
   }
 

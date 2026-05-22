@@ -245,7 +245,7 @@ export class ChromeApiAdapter implements StorageAdapter {
   async getThumbnail(id: string): Promise<string | undefined> {
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       return new Promise((resolve) => {
-        chrome.storage.local.get(`thumb_${id}`, async (result: { [key: string]: any }) => {
+        chrome.storage.local.get(`thumb_${id}`, async (result: { [key: string]: string | undefined }) => {
           if (chrome.runtime.lastError || !result[`thumb_${id}`]) {
             // Try fallback
             const fallback = await this.notesAdapter.getThumbnail(id);

@@ -58,7 +58,7 @@ export async function fetchThumbnail(url: string): Promise<string> {
       console.log('Attempting Chrome API capture for:', url);
       const dataUrl = await captureWithChromeAPI(url);
       return await resizeImageToDataURL(dataUrl, 256);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Chrome API capture failed, falling back to Favicon API:', e);
       imageUrl = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=256`;
     }

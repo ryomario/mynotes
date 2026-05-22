@@ -57,7 +57,7 @@ export function loadSettings() {
   }
 }
 
-export function saveSettings(key: string, value: any) {
+export function saveSettings(key: string, value: string | boolean | number) {
   const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
   settings[key] = value;
   localStorage.setItem('mynotes_settings', JSON.stringify(settings));

@@ -37,9 +37,9 @@ export function getBookmarkSettings(): BookmarkSettings {
   }
 }
 
-export function saveBookmarkSetting(key: keyof BookmarkSettings, value: any) {
+export function saveBookmarkSetting<K extends keyof BookmarkSettings>(key: K, value: BookmarkSettings[K]) {
   const settings = getBookmarkSettings();
-  (settings as any)[key] = value;
+  settings[key] = value;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 }
 

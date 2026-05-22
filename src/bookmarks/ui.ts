@@ -28,7 +28,7 @@ let thumbnailTargetId: string | null = null;
 let modalMode: 'create' | 'edit' = 'create';
 let editingBookmarkId: string | null = null;
 let isSelectionMode = false;
-let selectedBookmarkIds = new Set<string>();
+const selectedBookmarkIds = new Set<string>();
 
 export function initBookmarksUI() {
   renderFolders();
