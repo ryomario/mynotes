@@ -1,25 +1,35 @@
 # Pull Request Template
 
-**Summary**
-- Provide a clear and concise description of the changes.
-- Reference any related issue(s) using `#<issue-number>`.
+## Description
 
-**Type of Change** (check one)
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Refactor (code change that neither fixes a bug nor adds a feature)
-- [ ] Documentation update
-- [ ] Tests addition / update
+Please provide a clear and concise summary of the changes introduced by this pull request. Explain the problem being solved and how this PR addresses it.
 
-**Checklist**
-- [ ] My code follows the project's style guidelines (run `pnpm lint`).
-- [ ] I have added tests that prove my fix is effective or that my feature works.
-- [ ] All new and existing tests pass (`pnpm test`).
-- [ ] I have updated the documentation if applicable.
-- [ ] I have verified that the changes do not break the CI pipeline.
+Fixes # (issue number)
 
-**Screenshots (if applicable)**
-- Add screenshots or GIFs to illustrate UI changes.
+## Type of Change (Please check all that apply)
+
+- [ ] **feat**: A new feature (non-breaking change which adds functionality)
+- [ ] **fix**: A bug fix (non-breaking change which fixes an issue)
+- [ ] **refactor**: A code change that neither fixes a bug nor adds a feature
+- [ ] **docs**: Documentation update
+- [ ] **style**: Styling, formatting, or visual changes (non-breaking)
+- [ ] **perf**: A code change that improves performance
+- [ ] **test**: Adding missing tests or correcting existing tests
+- [ ] **chore**: Auxiliary tasks, dependency updates, or build process updates
+
+## Checklist
+
+- [ ] My code follows the project's **[Coding Style guidelines](CONTRIBUTING.md#4-coding-style)**.
+- [ ] My commit messages follow the **[Conventional Commits specification](CONTRIBUTING.md#5-how-to-write-a-commit-message)**.
+- [ ] I have run the linter locally and it passes (`pnpm lint`).
+- [ ] I have added new tests for my changes (if applicable) or verified that existing tests pass (`pnpm test`).
+- [ ] My build is successful locally (`pnpm build`).
+- [ ] I have updated the documentation (like `README.md` or other docs) accordingly.
+- [ ] I have verified that all GitHub Action workflows pass.
+
+## Screenshots or Demos (if applicable)
+
+*Please attach any visual comparisons, screenshots, or GIF animations showing before/after behavior for any UI-related modifications.*
 
 ---
-*This PR template is automatically added by the repository maintainers to help ensure a consistent contribution workflow.*
+*Thank you for contributing! Your PR will be automatically checked by our CI suite (Lint, Test, Build).*

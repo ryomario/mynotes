@@ -1,0 +1,58 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve My Notes.
+title: "fix: [short description of the bug]"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the sections below as completely as possible to help us diagnose and fix the issue quickly.
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Describe the Bug
+      description: A clear and concise description of what the bug is.
+      placeholder: I encountered an error when trying to...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 🚶 Steps to Reproduce
+      description: Describe the steps required to reproduce the behavior.
+      placeholder: |
+        1. Open the application.
+        2. Click on the 'Bookmarks' tab.
+        3. Click 'Add Bookmark' without entering a URL.
+        4. See the crash/error.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 🎯 Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: The UI should show a validation error instead of crashing.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 🖼️ Screenshots or Screencasts
+      description: If applicable, add screenshots or animated GIFs to help explain the problem.
+  - type: textarea
+    id: environment
+    attributes:
+      label: 💻 Environment Information
+      description: Tell us about the environment in which you encountered the bug.
+      placeholder: |
+        - OS: Windows 11 / macOS Sequoia / Ubuntu 24.04
+        - Browser: Chrome 124 / Firefox 125 / Brave
+        - App Version / Commit: 1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 💡 Additional Context
+      description: Add any other context about the problem here (e.g., error logs, stack traces).
