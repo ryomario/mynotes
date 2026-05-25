@@ -1,13 +1,13 @@
 {
   "name": "mynotes",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "author": "Mario",
   "scripts": {
     "lint": "eslint src",
     "test": "vitest",
     "dev": "vite --port 3000",
     "build": "tsc && vite build",
-    "build:single": "vite build --mode single",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -23,7 +23,6 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.4",
     "vite": "^8.0.10",
-    "vite-plugin-singlefile": "^2.3.3",
     "vitest": "^1.5.0"
   }
 }
