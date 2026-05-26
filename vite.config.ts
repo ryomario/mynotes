@@ -1,10 +1,29 @@
-// vite.config.ts
 import { defineConfig } from "vite";
+
 export default defineConfig({
+  base: './',
   plugins: [],
-  test: {
-    globals: true,
-    environment: "jsdom",
-    include: ["src/**/*.test.{ts,tsx}"]
+
+  build: {
+    target: 'esnext',
+    minify: 'esbuild',
+
+    modulePreload: {
+      polyfill: false
+    },
+
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        bookmarks: 'bookmarks.html'
+      },
+      output: {
+        manualChunks: () => null
+      }
+    }
+  },
+
+  esbuild: {
+    drop: ['console', 'debugger']
   }
-});
+})
