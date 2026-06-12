@@ -29,7 +29,7 @@ export function getRelativeTime(timestamp: number): string {
   return t('time_years_ago', { count: String(years) });
 }
 
-import type { Note } from '../storages/storage'
+import type { Note } from '../shared/types'
 
 export function getSortedNotes(notes: Note[]): Note[] {
   return [...notes].sort((a, b) => {

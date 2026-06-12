@@ -1,6 +1,7 @@
-import { getStorageAdapter, type Note } from './storages/storage';
+import { getStorageService } from './shared/services/storage/storageFactory';
+import type { Note } from './shared/types';
 
-const storage = getStorageAdapter();
+const storage = getStorageService();
 
 export const state = {
   notes: [] as Note[],

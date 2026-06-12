@@ -2,7 +2,7 @@ import { state, saveNote, deleteNote } from '../state';
 import { getTitle, getRelativeTime, getSortedNotes } from '../utils/noteUtils';
 import { updateEditorContent, noteEditor } from './editor';
 import { saveSettings } from './settings';
-import type { Note } from '../storages/storage';
+import type { Note } from '../shared/types';
 import { t } from '../utils/i18n';
 
 export const notesList = document.getElementById('notes-list') as HTMLElement;

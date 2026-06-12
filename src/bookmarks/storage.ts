@@ -1,7 +1,7 @@
-import type { Bookmark, BookmarkFolder } from './types';
-import { getStorageAdapter } from '../storages/storage';
+import type { Bookmark, BookmarkFolder } from '../shared/types';
+import { getStorageService } from '../shared/services/storage/storageFactory';
 
-const storage = getStorageAdapter();
+const storage = getStorageService();
 
 const defaultFolders: BookmarkFolder[] = [
   { id: 'favorites', name: 'Favorites', parentId: null },
