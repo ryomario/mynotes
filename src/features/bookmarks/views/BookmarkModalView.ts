@@ -3,7 +3,7 @@ import type { BookmarkStorageService } from '../services/BookmarkStorageService'
 import type { ThumbnailService } from '../services/ThumbnailService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
 import { fileToDataUrl, isValidBookmarkUrl, orderFoldersForSelect } from '../utils/bookmarkUtils';
-import { t } from '../../../utils/i18n';
+import { t } from '../../../shared/services/i18n/i18n';
 
 export class BookmarkModalView {
   private modalBackdrop = document.getElementById('bookmark-modal-backdrop') as HTMLElement | null;

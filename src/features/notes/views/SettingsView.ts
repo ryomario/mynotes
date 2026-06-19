@@ -1,5 +1,5 @@
 import type { Note } from '../../../shared/types';
-import { t } from '../../../utils/i18n';
+import { t } from '../../../shared/services/i18n/i18n';
 import { NotesStore } from '../state/NotesStore';
 
 type SettingValue = string | boolean | number;

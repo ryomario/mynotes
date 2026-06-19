@@ -6,7 +6,7 @@ import { BookmarksSettingsView } from './BookmarksSettingsView';
 import { ThumbnailService } from '../services/ThumbnailService';
 import { BookmarkStorageService } from '../services/BookmarkStorageService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
-import { translateDOM, createLanguageSelectorComponent } from '../../../utils/i18n';
+import { translateDOM, createLanguageSelectorComponent } from '../../../shared/services/i18n/i18n';
 import type { BookmarksStore } from '../state/BookmarksStore';
 
 /**

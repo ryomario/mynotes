@@ -2,7 +2,7 @@ import type { BookmarksStore } from '../state/BookmarksStore';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
 import type { ThumbnailService } from '../services/ThumbnailService';
 import { orderFoldersForSelect } from '../utils/bookmarkUtils';
-import { t } from '../../../utils/i18n';
+import { t } from '../../../shared/services/i18n/i18n';
 
 export class BookmarksSettingsView {
   private settingsBtn = document.getElementById('bookmarks-settings-btn') as HTMLButtonElement | null;

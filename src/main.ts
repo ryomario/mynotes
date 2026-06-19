@@ -1,6 +1,6 @@
 import { getStorageService } from './shared/services/storage/storageFactory';
 import { getSortedNotes } from './utils/noteUtils';
-import { translateDOM, createLanguageSelectorComponent } from './utils/i18n';
+import { translateDOM, createLanguageSelectorComponent } from './shared/services/i18n/i18n';
 import { EditorView, NotesStore, SettingsView, SidebarView } from './features/notes';
 
 async function init() {

@@ -5,7 +5,7 @@ import { BookmarksPageView, BookmarksStore, BookmarkStorageService, ThumbnailSer
 /** Bootstrap the Bookmarks feature using the new modular architecture */
 async function init(): Promise<void> {
   // Translation and language selector (still needed for static strings)
-  const { translateDOM } = await import('../utils/i18n');
+  const { translateDOM } = await import('../shared/services/i18n/i18n');
   translateDOM();
 
   // Core services & store

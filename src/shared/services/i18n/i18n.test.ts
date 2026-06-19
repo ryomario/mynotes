@@ -1,4 +1,3 @@
-// src/utils/i18n.test.ts
 import { describe, test, expect, beforeEach, afterAll } from "vitest";
 import { getCurrentLanguage, saveLanguageSetting, t } from "./i18n";
 

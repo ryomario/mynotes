@@ -1,5 +1,5 @@
 import { getRelativeTime, getSortedNotes, getTitle } from '../../../utils/noteUtils';
-import { t } from '../../../utils/i18n';
+import { t } from '../../../shared/services/i18n/i18n';
 import type { Note } from '../../../shared/types';
 import type { NotesState } from '../state/NotesStore';
 import { NotesStore } from '../state/NotesStore';

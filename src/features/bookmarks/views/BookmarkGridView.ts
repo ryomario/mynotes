@@ -3,7 +3,7 @@ import type { ThumbnailService } from '../services/ThumbnailService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
 import type { Bookmark } from '../types';
 import { fileToDataUrl } from '../utils/bookmarkUtils';
-import { t } from '../../../utils/i18n';
+import { t } from '../../../shared/services/i18n/i18n';
 
 export class BookmarkGridView {
   private gridEl = document.getElementById('bookmarks-grid') as HTMLElement | null;

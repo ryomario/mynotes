@@ -5,8 +5,8 @@ export const availableLanguages: { code: Language; label: string }[] = [
   { code: 'id', label: 'Bahasa Indonesia' },
 ];
 
-import enJson from '../langs/en.json';
-import idJson from '../langs/id.json';
+import enJson from '../../../langs/en.json';
+import idJson from '../../../langs/id.json';
 
 const enTranslations = enJson as Record<string, string>;
 const idTranslations = idJson as Record<string, string>;
