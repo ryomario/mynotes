@@ -1,0 +1,61 @@
+import type { BookmarksStore } from '../state/BookmarksStore';
+import { orderFoldersForSelect } from '../utils/bookmarkUtils';
+
+export class FolderModalView {
+  private addFolderBtn = document.getElementById('add-folder-btn') as HTMLButtonElement | null;
+  private modalBackdrop = document.getElementById('folder-modal-backdrop') as HTMLElement | null;
+  private closeBtn = document.getElementById('folder-modal-close') as HTMLButtonElement | null;
+  private cancelBtn = document.getElementById('folder-cancel-btn') as HTMLButtonElement | null;
+  private form = document.getElementById('folder-form') as HTMLFormElement | null;
+  private titleInput = document.getElementById('folder-title-input') as HTMLInputElement | null;
+  private parentInput = document.getElementById('folder-parent-input') as HTMLSelectElement | null;
+
+  constructor(private store: BookmarksStore) {}
+
+  init(): void {
+    this.store.subscribe(() => this.renderParentOptions());
+    this.addFolderBtn?.addEventListener('click', () => this.open());
+    this.closeBtn?.addEventListener('click', () => this.close());
+    this.cancelBtn?.addEventListener('click', () => this.close());
+    this.modalBackdrop?.addEventListener('click', (event) => {
+      if (event.target === this.modalBackdrop) this.close();
+    });
+    this.form?.addEventListener('submit', (event) => void this.handleSubmit(event));
+  }
+
+  private renderParentOptions(): void {
+    if (!this.parentInput) return;
+    const selected = this.parentInput.value;
+    this.parentInput.innerHTML = '<option value="">No parent (root)</option>';
+    orderFoldersForSelect(this.store.state.folders).forEach(folder => {
+      const option = document.createElement('option');
+      option.value = folder.id;
+      option.textContent = `${'-'.repeat(folder.level)}${folder.level > 0 ? ' ' : ''}${folder.name}`;
+      this.parentInput?.appendChild(option);
+    });
+    this.parentInput.value = selected;
+  }
+
+  private open(): void {
+    if (!this.modalBackdrop || !this.form || !this.titleInput) return;
+    this.form.reset();
+    this.renderParentOptions();
+    this.modalBackdrop.hidden = false;
+    this.titleInput.focus();
+  }
+
+  private close(): void {
+    if (!this.modalBackdrop || !this.form) return;
+    this.modalBackdrop.hidden = true;
+    this.form.reset();
+  }
+
+  private async handleSubmit(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    const name = this.titleInput?.value.trim();
+    if (!name) return;
+    const folder = await this.store.addFolder(name, this.parentInput?.value || null);
+    this.close();
+    this.store.setActiveFolder(folder.id);
+  }
+}

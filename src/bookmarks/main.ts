@@ -1,19 +1,24 @@
-import { initBookmarkState } from './state';
-import { initBookmarksUI } from './ui';
-import { translateDOM, createLanguageSelectorComponent } from '../utils/i18n';
+import { getStorageService } from '../shared/services/storage/storageFactory';
+import { getBrowserService } from '../shared/services/browser/browserFactory';
+import { BookmarksPageView, BookmarksStore, BookmarkStorageService, ThumbnailService } from '../features/bookmarks';
 
-async function init() {
-  // Initialize translations
+/** Bootstrap the Bookmarks feature using the new modular architecture */
+async function init(): Promise<void> {
+  // Translation and language selector (still needed for static strings)
+  const { translateDOM } = await import('../shared/services/i18n/i18n');
   translateDOM();
 
-  await initBookmarkState();
-  initBookmarksUI();
+  // Core services & store
+  const storage = getStorageService();
+  const browser = getBrowserService();
+  const store = new BookmarksStore({ storageService: storage, browserService: browser });
+  await store.loadBookmarks();
+  const bookmarkStorage = new BookmarkStorageService(storage);
+  const thumbnailService = new ThumbnailService(browser, storage);
 
-  // Inject language selector
-  const settingsSection = document.querySelector('#bookmarks-settings-sidebar .settings-content .settings-section');
-  if (settingsSection) {
-    settingsSection.appendChild(createLanguageSelectorComponent());
-  }
+  // Initialise the page view which wires UI to the store and services
+  const pageView = new BookmarksPageView(store, thumbnailService, bookmarkStorage);
+  await pageView.init();
 }
 
 void init();

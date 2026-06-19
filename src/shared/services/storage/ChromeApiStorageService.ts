@@ -1,8 +1,9 @@
-import { IndexedDBAdapter } from "./IndexedDBAdapter";
-import type { StorageAdapter, Note, Bookmark, BookmarkFolder } from "./storage";
+import { IndexedDBStorageService } from "./IndexedDBStorageService";
+import type { StorageService } from "./StorageService";
+import type { Note, Bookmark, BookmarkFolder } from "../../types";
 
-export class ChromeApiAdapter implements StorageAdapter {
-  private notesAdapter = new IndexedDBAdapter();
+export class ChromeApiStorageService implements StorageService {
+  private notesAdapter = new IndexedDBStorageService();
 
   // Notes: use IndexedDB
   async getNotes(): Promise<Note[]> {
@@ -124,9 +125,7 @@ export class ChromeApiAdapter implements StorageAdapter {
         }
         // Always try to remove from IndexedDB too as fallback/cleanup
         this.notesAdapter.getThumbnail(id).then(exists => {
-          if (exists) this.notesAdapter.saveThumbnail(id, ''); // IndexedDB delete thumbnail logic? 
-          // Wait, IndexedDBAdapter deleteBookmark also handles thumbnails now.
-          // But ChromeApiAdapter doesn't call notesAdapter.deleteBookmark.
+          if (exists) this.notesAdapter.saveThumbnail(id, '');
         });
         resolve();
       });
@@ -247,7 +246,6 @@ export class ChromeApiAdapter implements StorageAdapter {
       return new Promise((resolve) => {
         chrome.storage.local.get(`thumb_${id}`, async (result: { [key: string]: string | undefined }) => {
           if (chrome.runtime.lastError || !result[`thumb_${id}`]) {
-            // Try fallback
             const fallback = await this.notesAdapter.getThumbnail(id);
             resolve(fallback);
           } else {

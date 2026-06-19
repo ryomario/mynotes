@@ -1,3 +1,12 @@
+export interface Note {
+  id: string;
+  content: string;
+  updatedAt: number;
+  pinned?: boolean;
+  locked?: boolean;
+  order?: number;
+}
+
 export interface Bookmark {
   id: string;
   title: string;

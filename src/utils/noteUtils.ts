@@ -3,7 +3,7 @@ export function getTitle(content: string): string {
   return firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
 }
 
-import { t } from './i18n';
+import { t } from '../shared/services/i18n/i18n';
 
 export function getRelativeTime(timestamp: number): string {
   const now = Date.now();
@@ -29,7 +29,7 @@ export function getRelativeTime(timestamp: number): string {
   return t('time_years_ago', { count: String(years) });
 }
 
-import type { Note } from '../storages/storage'
+import type { Note } from '../shared/types'
 
 export function getSortedNotes(notes: Note[]): Note[] {
   return [...notes].sort((a, b) => {

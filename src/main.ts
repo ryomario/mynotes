@@ -1,20 +1,17 @@
-import { state, initNotes } from './state';
+import { getStorageService } from './shared/services/storage/storageFactory';
 import { getSortedNotes } from './utils/noteUtils';
-import { initSettings, loadSettings } from './ui/settings';
-import { initSidebar, renderNotesList, selectNote } from './ui/sidebar';
-import { initEditor, createNewNote } from './ui/editor';
-import { translateDOM, createLanguageSelectorComponent } from './utils/i18n';
+import { translateDOM, createLanguageSelectorComponent } from './shared/services/i18n/i18n';
+import { EditorView, NotesStore, SettingsView, SidebarView } from './features/notes';
 
 async function init() {
   // Initialize translations
   translateDOM();
 
-  // 1. Initialize core state (load from storage)
-  await initNotes();
+  const notesStore = new NotesStore(getStorageService());
+  await notesStore.loadNotes();
 
-  // 2. Initialize and load settings
-  initSettings();
-  loadSettings();
+  const settingsView = new SettingsView(notesStore);
+  settingsView.init();
 
   // Inject language selector
   const settingsSection = document.querySelector('#settings-sidebar .settings-content .settings-section');
@@ -22,27 +19,33 @@ async function init() {
     settingsSection.appendChild(createLanguageSelectorComponent());
   }
 
-  // 3. Initialize UI modules
-  initEditor();
-  initSidebar();
+  const editorView = new EditorView(notesStore);
+  const sidebarView = new SidebarView(notesStore, {
+    onSelectNote: id => {
+      const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
+      if (settings.rememberLastNote) {
+        settingsView.saveSettings('lastNoteId', id);
+      }
+    },
+  });
 
-  // 4. Render initial view
-  renderNotesList();
+  editorView.init();
+  sidebarView.init();
 
-  // 5. Select initial note based on user settings
   const settings = JSON.parse(localStorage.getItem('mynotes_settings') || '{}');
-  if (state.notes.length > 0) {
+  if (notesStore.state.notes.length > 0) {
     const lastNoteId = settings.rememberLastNote ? settings.lastNoteId : null;
-    const noteToSelect = lastNoteId ? state.notes.find(n => n.id === lastNoteId) : null;
+    const noteToSelect = lastNoteId ? notesStore.state.notes.find(note => note.id === lastNoteId) : null;
 
     if (noteToSelect) {
-      selectNote(noteToSelect.id);
+      notesStore.selectNote(noteToSelect.id);
     } else {
-      const sorted = getSortedNotes(state.notes);
-      selectNote(sorted[0].id);
+      const sorted = getSortedNotes(notesStore.state.notes);
+      notesStore.selectNote(sorted[0].id);
     }
   } else {
-    createNewNote();
+    await notesStore.createNote();
+    editorView.focus();
   }
 }
 
