@@ -62,6 +62,7 @@
   "generate_all_thumbs_btn": "Buat Semua Thumbnail",
   "all_bookmarks": "Semua Bookmark",
   "selected_count": "{count} terpilih",
+  "folder_item_count": "{count} item",
   "select_all": "Pilih Semua",
   "deselect_all": "Batal Pilih Semua",
   "delete_selected": "Hapus Terpilih",

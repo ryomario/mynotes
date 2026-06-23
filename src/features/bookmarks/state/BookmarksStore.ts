@@ -3,7 +3,7 @@ import type { Bookmark, BookmarkFolder } from '../../../shared/types';
 import type { StorageService } from '../../../shared/services/storage/StorageService';
 import { BookmarkStorageService } from '../services/BookmarkStorageService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
-import { createDummyBookmarks, getVisibleBookmarks } from '../utils/bookmarkUtils';
+import { createDummyBookmarks, getVisibleBookmarks, getVisibleFolders } from '../utils/bookmarkUtils';
 
 export interface BookmarksState {
   folders: BookmarkFolder[];
@@ -179,9 +179,12 @@ export class BookmarksStore extends Store<BookmarksState> {
     this.setState({ isSelectionMode: false, selectedBookmarkIds: new Set() });
   }
 
-  // ---- Utility: visible bookmarks based on active folder and query ----
   getVisibleBookmarks(): Bookmark[] {
     return getVisibleBookmarks(this.state.folders, this.state.bookmarks, this.state.activeFolderId, this.state.query);
+  }
+
+  getVisibleFolders(): BookmarkFolder[] {
+    return getVisibleFolders(this.state.folders, this.state.activeFolderId, this.state.query);
   }
 
   async generateDummyBookmarks(count: number = 50): Promise<void> {

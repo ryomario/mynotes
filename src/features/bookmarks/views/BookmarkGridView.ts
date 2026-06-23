@@ -1,8 +1,8 @@
 import type { BookmarksStore } from '../state/BookmarksStore';
 import type { ThumbnailService } from '../services/ThumbnailService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
-import type { Bookmark } from '../types';
-import { fileToDataUrl } from '../utils/bookmarkUtils';
+import type { Bookmark, BookmarkFolder } from '../types';
+import { fileToDataUrl, getBookmarkCountForFolder } from '../utils/bookmarkUtils';
 import { t } from '../../../shared/services/i18n/i18n';
 
 export class BookmarkGridView {
@@ -29,7 +29,8 @@ export class BookmarkGridView {
   private render(): void {
     if (!this.gridEl || !this.mainEl) return;
 
-    const visible = this.store.getVisibleBookmarks();
+    const visibleBookmarks = this.store.getVisibleBookmarks();
+    const visibleFolders = this.store.getVisibleFolders();
     const settings = bookmarkSettingsService.getBookmarkSettings();
     const containerWidth = this.gridEl.clientWidth || this.mainEl.clientWidth;
     const itemMinWidth = 230;
@@ -39,11 +40,11 @@ export class BookmarkGridView {
     const showUrl = settings.showUrlInCard ?? true;
     const itemHeight = showUrl ? 200 : 174;
 
-    this.renderSelectionToolbar(visible);
+    this.renderSelectionToolbar(visibleBookmarks);
 
     const scrollTop = this.mainEl.scrollTop;
     const viewportHeight = this.mainEl.clientHeight;
-    const totalItems = visible.length + 1;
+    const totalItems = visibleBookmarks.length + visibleFolders.length + 1;
     const totalRows = Math.ceil(totalItems / columns);
     const totalHeight = Math.max(itemHeight, totalRows * (itemHeight + gap) - gap);
 
@@ -66,18 +67,48 @@ export class BookmarkGridView {
       card.style.left = `${col * (itemWidth + gap)}px`;
       card.style.top = `${row * (itemHeight + gap)}px`;
 
-      if (i === 0) this.renderAddCard(card);
-      else this.renderBookmarkCard(card, visible[i - 1], showUrl);
+      if (i === 0) {
+        this.renderAddCard(card);
+      } else if (i <= visibleFolders.length) {
+        this.renderFolderCard(card, visibleFolders[i - 1], showUrl);
+      } else {
+        this.renderBookmarkCard(card, visibleBookmarks[i - 1 - visibleFolders.length], showUrl);
+      }
 
       this.gridEl.appendChild(card);
     }
 
-    if (visible.length === 0 && startIndex === 0) {
+    if (visibleBookmarks.length === 0 && visibleFolders.length === 0 && startIndex === 0) {
       const empty = document.createElement('div');
       empty.className = 'bookmarks-empty';
       empty.textContent = t('no_bookmarks_found');
       this.gridEl.appendChild(empty);
     }
+  }
+
+  private renderFolderCard(card: HTMLElement, folder: BookmarkFolder, showUrl: boolean): void {
+    card.classList.add('folder-card');
+    card.innerHTML = `
+      <div class="bookmark-card-link" style="cursor: pointer;">
+        <div class="bookmark-thumb placeholder folder-grid-thumb" style="color: var(--accent);">
+          <svg viewBox="0 0 24 24" width="48" height="48">
+            <path fill="currentColor" d="M10,4L12,6H20A2,2 0 0,1 22,8V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4H10Z"/>
+          </svg>
+        </div>
+        <div class="bookmark-meta">
+          <h3 class="${showUrl ? '' : 'no-url'}">${folder.name}</h3>
+          ${showUrl ? `<p>${t('folder_item_count', { count: String(getBookmarkCountForFolder(this.store.state.folders, this.store.state.bookmarks, folder.id)) })}</p>` : ''}
+        </div>
+      </div>
+    `;
+
+    card.querySelector('.bookmark-card-link')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      this.store.setActiveFolder(folder.id);
+      const searchEl = document.getElementById('bookmark-search') as HTMLInputElement | null;
+      if (searchEl) searchEl.value = '';
+      document.querySelector('.bookmarks-main')?.scrollTo({ top: 0 });
+    });
   }
 
   private renderSelectionToolbar(visible: Bookmark[]): void {

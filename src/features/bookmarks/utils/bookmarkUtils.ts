@@ -48,20 +48,51 @@ export function getVisibleBookmarks(
   query: string,
 ): Bookmark[] {
   const normalizedQuery = query.trim().toLowerCase();
-  const visibleFolderIds = activeFolderId === 'all'
-    ? null
-    : new Set([activeFolderId, ...getDescendantFolderIds(folders, activeFolderId)]);
 
-  const byFolder = visibleFolderIds
-    ? bookmarks.filter(bookmark => visibleFolderIds.has(bookmark.folderId))
-    : bookmarks;
+  if (activeFolderId === 'all') {
+    if (!normalizedQuery) {
+      return bookmarks;
+    } else {
+      return bookmarks.filter(bookmark =>
+        bookmark.title.toLowerCase().includes(normalizedQuery)
+        || bookmark.url.toLowerCase().includes(normalizedQuery),
+      );
+    }
+  } else {
+    if (!normalizedQuery) {
+      return bookmarks.filter(bookmark => bookmark.folderId === activeFolderId);
+    } else {
+      const visibleFolderIds = new Set([activeFolderId, ...getDescendantFolderIds(folders, activeFolderId)]);
+      return bookmarks.filter(bookmark =>
+        visibleFolderIds.has(bookmark.folderId)
+        && (bookmark.title.toLowerCase().includes(normalizedQuery)
+          || bookmark.url.toLowerCase().includes(normalizedQuery)),
+      );
+    }
+  }
+}
 
-  if (!normalizedQuery) return byFolder;
+export function getVisibleFolders(
+  folders: BookmarkFolder[],
+  activeFolderId: string,
+  query: string,
+): BookmarkFolder[] {
+  const normalizedQuery = query.trim().toLowerCase();
 
-  return byFolder.filter(bookmark =>
-    bookmark.title.toLowerCase().includes(normalizedQuery)
-    || bookmark.url.toLowerCase().includes(normalizedQuery),
-  );
+  if (activeFolderId === 'all') {
+    if (!normalizedQuery) {
+      return folders.filter(f => f.id !== 'all' && !f.parentId);
+    } else {
+      return folders.filter(f => f.id !== 'all' && f.name.toLowerCase().includes(normalizedQuery));
+    }
+  } else {
+    if (!normalizedQuery) {
+      return folders.filter(f => f.parentId === activeFolderId);
+    } else {
+      const descendantIds = new Set(getDescendantFolderIds(folders, activeFolderId));
+      return folders.filter(f => descendantIds.has(f.id) && f.name.toLowerCase().includes(normalizedQuery));
+    }
+  }
 }
 
 export function orderFoldersForSelect(folders: BookmarkFolder[]): OrderedFolderOption[] {
