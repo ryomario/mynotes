@@ -87,9 +87,13 @@ export class BookmarkGridView {
   }
 
   private renderFolderCard(card: HTMLElement, folder: BookmarkFolder, showUrl: boolean): void {
+    const isSelectionMode = this.store.state.isSelectionMode;
+
     card.classList.add('folder-card');
+    card.classList.toggle('selection-disabled', isSelectionMode);
+    card.setAttribute('aria-disabled', String(isSelectionMode));
     card.innerHTML = `
-      <div class="bookmark-card-link" style="cursor: pointer;">
+      <div class="bookmark-card-link" style="cursor: ${isSelectionMode ? 'not-allowed' : 'pointer'};">
         <div class="bookmark-thumb placeholder folder-grid-thumb" style="color: var(--accent);">
           <svg viewBox="0 0 24 24" width="48" height="48">
             <path fill="currentColor" d="M10,4L12,6H20A2,2 0 0,1 22,8V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4H10Z"/>
@@ -104,6 +108,8 @@ export class BookmarkGridView {
 
     card.querySelector('.bookmark-card-link')?.addEventListener('click', (event) => {
       event.preventDefault();
+      if (this.store.state.isSelectionMode) return;
+
       this.store.setActiveFolder(folder.id);
       const searchEl = document.getElementById('bookmark-search') as HTMLInputElement | null;
       if (searchEl) searchEl.value = '';

@@ -60,7 +60,12 @@ export class BookmarksStore extends Store<BookmarksState> {
 
   // ---- Folder Management ----
   setActiveFolder(folderId: string): void {
-    this.setState({ activeFolderId: folderId, query: '' });
+    this.setState({
+      activeFolderId: folderId,
+      query: '',
+      selectedBookmarkIds: new Set(),
+      isSelectionMode: false,
+    });
   }
 
   toggleFolderCollapse(folderId: string): void {
