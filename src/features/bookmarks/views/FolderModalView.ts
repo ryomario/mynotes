@@ -14,7 +14,6 @@ export class FolderModalView {
   constructor(private store: BookmarksStore) { }
 
   init(): void {
-    this.store.subscribe(() => this.renderParentOptions());
     this.addFolderBtn?.addEventListener('click', () => this.open());
     this.closeBtn?.addEventListener('click', () => this.close());
     this.cancelBtn?.addEventListener('click', () => this.close());
