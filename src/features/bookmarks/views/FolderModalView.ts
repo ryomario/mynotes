@@ -18,8 +18,12 @@ export class FolderModalView {
     this.addFolderBtn?.addEventListener('click', () => this.open());
     this.closeBtn?.addEventListener('click', () => this.close());
     this.cancelBtn?.addEventListener('click', () => this.close());
+    let mousedownTarget: EventTarget | null = null;
+    this.modalBackdrop?.addEventListener('mousedown', (event) => {
+      mousedownTarget = event.target;
+    });
     this.modalBackdrop?.addEventListener('click', (event) => {
-      if (event.target === this.modalBackdrop) this.close();
+      if (mousedownTarget === this.modalBackdrop && event.target === this.modalBackdrop) this.close();
     });
     this.form?.addEventListener('submit', (event) => void this.handleSubmit(event));
   }

@@ -32,8 +32,12 @@ export class BookmarkModalView {
       const detail = (event as CustomEvent<{ mode?: 'create' | 'edit'; bookmarkId?: string }>).detail;
       this.open(detail?.mode ?? 'create', detail?.bookmarkId);
     });
+    let mousedownTarget: EventTarget | null = null;
+    this.modalBackdrop?.addEventListener('mousedown', (event) => {
+      mousedownTarget = event.target;
+    });
     this.modalBackdrop?.addEventListener('click', (event) => {
-      if (event.target === this.modalBackdrop) this.close();
+      if (mousedownTarget === this.modalBackdrop && event.target === this.modalBackdrop) this.close();
     });
     this.modalCloseBtn?.addEventListener('click', () => this.close());
     this.modalCancelBtn?.addEventListener('click', () => this.close());
