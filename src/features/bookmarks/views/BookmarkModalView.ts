@@ -22,7 +22,7 @@ export class BookmarkModalView {
     private store: BookmarksStore,
     private storageService: BookmarkStorageService,
     private thumbnailService: ThumbnailService,
-  ) {}
+  ) { }
 
   init(): void {
     void this.storageService;
@@ -70,13 +70,12 @@ export class BookmarkModalView {
         this.titleInput.value = bookmark.title;
         this.urlInput.value = bookmark.url;
         this.folderInput.value = bookmark.folderId;
-        if (this.modalTitle) this.modalTitle.textContent = 'Edit Bookmark';
+        if (this.modalTitle) this.modalTitle.textContent = t('edit_bookmark_title');
       }
     } else {
       if (this.modalTitle) this.modalTitle.textContent = t('add_bookmark_title');
-      const defaultFolderId = bookmarkSettingsService.getBookmarkSettings().defaultFolderId
-        || this.store.state.folders.find(folder => folder.id !== 'all')?.id
-        || '';
+      const defaultFolderId = (this.store.state.activeFolderId != 'all' ? this.store.state.activeFolderId : '')
+        || bookmarkSettingsService.getBookmarkSettings().defaultFolderId;
       if (defaultFolderId) this.folderInput.value = defaultFolderId;
     }
 

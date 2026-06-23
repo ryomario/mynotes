@@ -1,3 +1,4 @@
+import { t } from '../../../shared/services/i18n/i18n';
 import type { BookmarksStore } from '../state/BookmarksStore';
 import { orderFoldersForSelect } from '../utils/bookmarkUtils';
 
@@ -10,7 +11,7 @@ export class FolderModalView {
   private titleInput = document.getElementById('folder-title-input') as HTMLInputElement | null;
   private parentInput = document.getElementById('folder-parent-input') as HTMLSelectElement | null;
 
-  constructor(private store: BookmarksStore) {}
+  constructor(private store: BookmarksStore) { }
 
   init(): void {
     this.store.subscribe(() => this.renderParentOptions());
@@ -25,8 +26,8 @@ export class FolderModalView {
 
   private renderParentOptions(): void {
     if (!this.parentInput) return;
-    const selected = this.parentInput.value;
-    this.parentInput.innerHTML = '<option value="">No parent (root)</option>';
+    const selected = this.store.state.activeFolderId;
+    this.parentInput.innerHTML = `<option value="">${t('no_parent_option')}</option>`;
     orderFoldersForSelect(this.store.state.folders).forEach(folder => {
       const option = document.createElement('option');
       option.value = folder.id;
@@ -34,6 +35,9 @@ export class FolderModalView {
       this.parentInput?.appendChild(option);
     });
     this.parentInput.value = selected;
+    if (!selected || selected == 'all') {
+      this.parentInput.value = '';
+    }
   }
 
   private open(): void {
