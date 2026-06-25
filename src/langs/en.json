@@ -62,6 +62,7 @@
   "generate_all_thumbs_btn": "Generate All Thumbnails",
   "all_bookmarks": "All Bookmarks",
   "selected_count": "{count} selected",
+  "folder_item_count": "{count} items",
   "select_all": "Select All",
   "deselect_all": "Deselect All",
   "delete_selected": "Delete Selected",

@@ -2,7 +2,7 @@ import type { BrowserService } from '../../../shared/services/browser/BrowserSer
 import type { StorageService } from '../../../shared/services/storage/StorageService';
 
 export class ThumbnailService {
-  constructor(private browser: BrowserService, private storage: StorageService) {}
+  constructor(private browser: BrowserService, private storage: StorageService) { }
 
   /** Generate a thumbnail for a bookmark URL.
    *  Returns a data URL string.
@@ -33,8 +33,15 @@ export class ThumbnailService {
         console.error('Chrome API capture failed, falling back:', e);
       }
     }
-    // Fallback: use WordPress mshots or other public screenshot API
-    const fallbackUrl = `https://image.thum.io/get/width/200/${encodeURIComponent(url)}`;
+    /**
+     * Fallback: use Free Website Screenshot Generator
+     * 
+     * Website screen captures are taken from a 1200x1200 pixel browser.
+     * The above code will crop the original screen shot to 900px tall and 
+     * then resize the image to 640px wide, resulting in an image that is 
+     * 640px wide 480px tall.
+     */
+    const fallbackUrl = `//image.thum.io/get/width/640/crop/900/${url}`;
     const response = await fetch(fallbackUrl);
     const blob = await response.blob();
     return await this.blobToDataURL(blob);

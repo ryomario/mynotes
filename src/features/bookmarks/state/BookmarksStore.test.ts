@@ -72,6 +72,18 @@ describe('BookmarksStore', () => {
     expect(store.state.query).toBe('');
   });
 
+  it('clears selection mode when active folder changes', async () => {
+    await store.loadBookmarks();
+    store.enterSelectionMode('1');
+    store.toggleBookmarkSelection('2');
+
+    store.setActiveFolder('work');
+
+    expect(store.state.activeFolderId).toBe('work');
+    expect(store.state.isSelectionMode).toBe(false);
+    expect(store.state.selectedBookmarkIds).toEqual(new Set());
+  });
+
   it('toggles folder collapse state', () => {
     store.toggleFolderCollapse('work');
     expect(store.state.expandedFolderIds.has('work')).toBe(true);

@@ -22,7 +22,7 @@ export class BookmarkModalView {
     private store: BookmarksStore,
     private storageService: BookmarkStorageService,
     private thumbnailService: ThumbnailService,
-  ) {}
+  ) { }
 
   init(): void {
     void this.storageService;
@@ -32,8 +32,12 @@ export class BookmarkModalView {
       const detail = (event as CustomEvent<{ mode?: 'create' | 'edit'; bookmarkId?: string }>).detail;
       this.open(detail?.mode ?? 'create', detail?.bookmarkId);
     });
+    let mousedownTarget: EventTarget | null = null;
+    this.modalBackdrop?.addEventListener('mousedown', (event) => {
+      mousedownTarget = event.target;
+    });
     this.modalBackdrop?.addEventListener('click', (event) => {
-      if (event.target === this.modalBackdrop) this.close();
+      if (mousedownTarget === this.modalBackdrop && event.target === this.modalBackdrop) this.close();
     });
     this.modalCloseBtn?.addEventListener('click', () => this.close());
     this.modalCancelBtn?.addEventListener('click', () => this.close());
@@ -70,13 +74,12 @@ export class BookmarkModalView {
         this.titleInput.value = bookmark.title;
         this.urlInput.value = bookmark.url;
         this.folderInput.value = bookmark.folderId;
-        if (this.modalTitle) this.modalTitle.textContent = 'Edit Bookmark';
+        if (this.modalTitle) this.modalTitle.textContent = t('edit_bookmark_title');
       }
     } else {
       if (this.modalTitle) this.modalTitle.textContent = t('add_bookmark_title');
-      const defaultFolderId = bookmarkSettingsService.getBookmarkSettings().defaultFolderId
-        || this.store.state.folders.find(folder => folder.id !== 'all')?.id
-        || '';
+      const defaultFolderId = (this.store.state.activeFolderId != 'all' ? this.store.state.activeFolderId : '')
+        || bookmarkSettingsService.getBookmarkSettings().defaultFolderId;
       if (defaultFolderId) this.folderInput.value = defaultFolderId;
     }
 

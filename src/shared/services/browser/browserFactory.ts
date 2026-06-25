@@ -1,5 +1,6 @@
 import { ChromeBrowserService } from '../../../shared/services/browser/ChromeBrowserService';
 import type { BrowserService } from '../../../shared/services/browser/BrowserService';
+import { ClientBrowserService } from './ClientBrowserService';
 
 let browserInstance: BrowserService | null = null;
 
@@ -10,7 +11,16 @@ let browserInstance: BrowserService | null = null;
  */
 export function getBrowserService(): BrowserService {
   if (browserInstance) return browserInstance;
-  // For now we always use Chrome implementation.
-  browserInstance = new ChromeBrowserService();
+
+  const isChromeAPI = import.meta.env.VITE_STORAGE_TYPE == 'chrome-api';
+  console.log(`Using browser service: ${isChromeAPI ? 'chrome-api' : 'client'}`);
+
+  if (isChromeAPI) {
+    // Use Chrome implementation.
+    browserInstance = new ChromeBrowserService();
+  } else {
+    browserInstance = new ClientBrowserService();
+  }
+
   return browserInstance;
 }

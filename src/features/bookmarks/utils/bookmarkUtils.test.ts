@@ -4,6 +4,7 @@ import {
   getBookmarkCountForFolder,
   getDescendantFolderIds,
   getVisibleBookmarks,
+  getVisibleFolders,
   isValidBookmarkUrl,
   orderFoldersForSelect,
 } from './bookmarkUtils';
@@ -40,10 +41,22 @@ describe('bookmarkUtils', () => {
     expect(getBookmarkCountForFolder(folders, bookmarks, 'docs')).toBe(1);
   });
 
-  it('filters visible bookmarks by folder descendants and query', () => {
-    expect(getVisibleBookmarks(folders, bookmarks, 'work', '').map(bookmark => bookmark.id)).toEqual(['1', '2']);
+  it('filters visible bookmarks by folder scope when no query is present', () => {
+    expect(getVisibleBookmarks(folders, bookmarks, 'work', '').map(bookmark => bookmark.id)).toEqual(['2']);
+    expect(getVisibleBookmarks(folders, bookmarks, 'all', '').map(bookmark => bookmark.id)).toEqual(['1', '2', '3']);
+  });
+
+  it('filters visible bookmarks recursively when query is present', () => {
+    expect(getVisibleBookmarks(folders, bookmarks, 'work', 'vite').map(bookmark => bookmark.id)).toEqual(['1']);
     expect(getVisibleBookmarks(folders, bookmarks, 'all', 'vite').map(bookmark => bookmark.id)).toEqual(['1']);
     expect(getVisibleBookmarks(folders, bookmarks, 'personal', 'github')).toEqual([]);
+  });
+
+  it('filters visible folders depending on folder scope and query', () => {
+    expect(getVisibleFolders(folders, 'all', '').map(f => f.id)).toEqual(['work', 'personal']);
+    expect(getVisibleFolders(folders, 'work', '').map(f => f.id)).toEqual(['docs']);
+    expect(getVisibleFolders(folders, 'all', 'do').map(f => f.id)).toEqual(['docs']);
+    expect(getVisibleFolders(folders, 'work', 'do').map(f => f.id)).toEqual(['docs']);
   });
 
   it('orders folders for select inputs without the synthetic all folder', () => {

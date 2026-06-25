@@ -1054,3 +1054,11 @@ select option {
   font-weight: 600;
   color: var(--text-primary);
 }
+
+.folder-grid-thumb svg {
+  transition: transform 0.2s ease-in-out;
+}
+
+.bookmark-card:hover .folder-grid-thumb svg {
+  transform: scale(1.1);
+}

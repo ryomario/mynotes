@@ -22,7 +22,6 @@ export class BookmarksSettingsView {
 
   init(): void {
     if (this.seedBtn && !import.meta.env.DEV) this.seedBtn.style.display = 'none';
-    this.store.subscribe(() => this.loadSettingsIntoControls());
     this.settingsBtn?.addEventListener('click', () => this.sidebar?.classList.add('show'));
     this.closeBtn?.addEventListener('click', () => this.sidebar?.classList.remove('show'));
     this.defaultFolderSelect?.addEventListener('change', () => {

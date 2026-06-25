@@ -21,6 +21,8 @@ export class FolderTreeView {
     const allFolder = folders.find(folder => folder.id === 'all');
     if (allFolder) this.folderListEl.appendChild(this.createFolderNode(allFolder, 0));
 
+    this.expandFoldersContainsActiveFolder(folders);
+
     folders
       .filter(folder => folder.id !== 'all' && !folder.parentId)
       .forEach(folder => this.folderListEl?.appendChild(this.createFolderBranch(folder, 0)));
@@ -83,5 +85,23 @@ export class FolderTreeView {
     });
 
     return row;
+  }
+
+  private expandFoldersContainsActiveFolder(folders: BookmarkFolder[]): void {
+    const folderParentMap = new Map(
+      folders
+        .filter(folder => folder.id !== 'all')
+        .map(folder => [folder.id, folder.parentId])
+    );
+
+    let parentId = folderParentMap.get(this.store.state.activeFolderId);
+
+    while (parentId) {
+      if (!this.store.state.expandedFolderIds.has(parentId)) {
+        this.store.state.expandedFolderIds.add(parentId);
+      }
+
+      parentId = folderParentMap.get(parentId);
+    }
   }
 }
