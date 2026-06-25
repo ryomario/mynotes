@@ -3,6 +3,7 @@ import { BookmarkGridView } from './BookmarkGridView';
 import { BookmarkModalView } from './BookmarkModalView';
 import { FolderModalView } from './FolderModalView';
 import { BookmarksSettingsView } from './BookmarksSettingsView';
+import { MoveToModalView } from './MoveToModalView';
 import { ThumbnailService } from '../services/ThumbnailService';
 import { BookmarkStorageService } from '../services/BookmarkStorageService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
@@ -48,6 +49,8 @@ export class BookmarksPageView {
     folderModal.init();
     const settingsView = new BookmarksSettingsView(this.store, this.settingsService, this.thumbnailService);
     settingsView.init();
+    const moveToModal = new MoveToModalView(this.store);
+    moveToModal.init();
   }
 
   private registerGlobalListeners(): void {

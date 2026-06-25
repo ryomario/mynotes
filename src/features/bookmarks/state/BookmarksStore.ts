@@ -17,6 +17,7 @@ export interface BookmarksState {
   isSelectionMode: boolean;
   activeMenuBookmarkId: string | null;
   activeMenuFolderId: string | null;
+  renamingFolderId: string | null;
   isLoading: boolean;
 }
 
@@ -35,6 +36,7 @@ export class BookmarksStore extends Store<BookmarksState> {
       isSelectionMode: false,
       activeMenuBookmarkId: null,
       activeMenuFolderId: null,
+      renamingFolderId: null,
       isLoading: false,
     });
     void config.browserService;
@@ -167,6 +169,10 @@ export class BookmarksStore extends Store<BookmarksState> {
 
   setActiveMenuFolder(id: string | null): void {
     this.setState({ activeMenuFolderId: id });
+  }
+
+  setRenamingFolder(id: string | null): void {
+    this.setState({ renamingFolderId: id });
   }
 
   async renameFolder(id: string, name: string): Promise<void> {

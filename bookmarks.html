@@ -158,6 +158,29 @@
     </div>
   </aside>
 
+  <div id="move-to-modal-backdrop" class="bookmark-modal-backdrop" hidden>
+    <div class="bookmark-modal" role="dialog" aria-modal="true" aria-labelledby="move-to-modal-title">
+      <header class="bookmark-modal-header">
+        <h3 id="move-to-modal-title" data-i18n="move_to_title">Move Folder</h3>
+        <button id="move-to-modal-close" class="btn-close" type="button" aria-label="Close move modal">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+          </svg>
+        </button>
+      </header>
+      <form id="move-to-form" class="bookmark-form">
+        <label class="bookmark-form-field">
+          <span data-i18n="parent_folder_label">Folder Parent</span>
+          <select id="move-to-parent-input" required></select>
+        </label>
+        <div class="bookmark-form-actions">
+          <button id="move-to-cancel-btn" type="button" class="btn-action" data-i18n="cancel_btn">Cancel</button>
+          <button type="submit" class="btn-action primary" data-i18n="move_btn">Move</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script type="module" src="/src/bookmarks/main.ts"></script>
 </body>
 
