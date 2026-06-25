@@ -1,5 +1,6 @@
 import { Store } from '../../../shared/state/Store';
 import type { Bookmark, BookmarkFolder } from '../../../shared/types';
+import { getDescendantFolderIds } from '../utils/bookmarkUtils';
 import type { StorageService } from '../../../shared/services/storage/StorageService';
 import { BookmarkStorageService } from '../services/BookmarkStorageService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
@@ -15,6 +16,7 @@ export interface BookmarksState {
   selectedBookmarkIds: Set<string>;
   isSelectionMode: boolean;
   activeMenuBookmarkId: string | null;
+  activeMenuFolderId: string | null;
   isLoading: boolean;
 }
 
@@ -32,6 +34,7 @@ export class BookmarksStore extends Store<BookmarksState> {
       selectedBookmarkIds: new Set(),
       isSelectionMode: false,
       activeMenuBookmarkId: null,
+      activeMenuFolderId: null,
       isLoading: false,
     });
     void config.browserService;
@@ -160,6 +163,68 @@ export class BookmarksStore extends Store<BookmarksState> {
   // ---- UI Helpers (menu selection) ----
   setActiveMenuBookmark(id: string | null): void {
     this.setState({ activeMenuBookmarkId: id });
+  }
+
+  setActiveMenuFolder(id: string | null): void {
+    this.setState({ activeMenuFolderId: id });
+  }
+
+  async renameFolder(id: string, name: string): Promise<void> {
+    if (id === 'all') return;
+    const folder = this.state.folders.find(f => f.id === id);
+    if (!folder) return;
+    const updated: BookmarkFolder = { ...folder, name: name.trim() };
+    await this.bookmarkStorage.saveFolder(updated);
+    this.setState({
+      folders: this.state.folders.map(f => f.id === id ? updated : f)
+    });
+  }
+
+  async deleteFolder(id: string): Promise<void> {
+    if (id === 'all') return;
+    await this.bookmarkStorage.deleteFolder(id);
+
+    const descendantIds = getDescendantFolderIds(this.state.folders, id);
+    const idsToDelete = [id, ...descendantIds];
+    const remainingFolders = this.state.folders.filter(f => !idsToDelete.includes(f.id));
+    const remainingBookmarks = this.state.bookmarks.filter(b => !idsToDelete.includes(b.folderId));
+
+    let activeFolderId = this.state.activeFolderId;
+    if (idsToDelete.includes(activeFolderId)) {
+      activeFolderId = 'all';
+    }
+
+    this.setState({
+      folders: remainingFolders,
+      bookmarks: remainingBookmarks,
+      activeFolderId,
+    });
+  }
+
+  async moveFolder(id: string, parentId: string): Promise<void> {
+    if (id === 'all' || parentId === id) return;
+    const descendants = getDescendantFolderIds(this.state.folders, id);
+    if (descendants.includes(parentId)) {
+      console.error('Cannot move folder: Target folder is a child/descendant.');
+      return;
+    }
+
+    const folder = this.state.folders.find(f => f.id === id);
+    if (!folder) return;
+
+    const updated: BookmarkFolder = { ...folder, parentId: parentId === 'all' ? null : parentId };
+    await this.bookmarkStorage.saveFolder(updated);
+
+    this.setState({
+      folders: this.state.folders.map(f => f.id === id ? updated : f)
+    });
+  }
+
+  async openAllInFolder(folderId: string): Promise<void> {
+    const childBookmarks = this.state.bookmarks.filter(b => b.folderId === folderId);
+    for (const b of childBookmarks) {
+      window.open(b.url, '_blank');
+    }
   }
 
   // ---- Selection Mode ----

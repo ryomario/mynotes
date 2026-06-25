@@ -25,6 +25,7 @@ export class FolderModalView {
       if (mousedownTarget === this.modalBackdrop && event.target === this.modalBackdrop) this.close();
     });
     this.form?.addEventListener('submit', (event) => void this.handleSubmit(event));
+    document.addEventListener('bookmarks:openFolderModal', () => this.open());
   }
 
   private renderParentOptions(): void {

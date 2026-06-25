@@ -11,6 +11,7 @@ export interface StorageService {
   getBookmarks(): Promise<Bookmark[]>;
   saveBookmark(bookmark: Bookmark): Promise<void>;
   deleteBookmark(id: string): Promise<void>;
+  deleteBookmarkFolder(id: string): Promise<void>;
   deleteBookmarks(ids: string[]): Promise<void>;
 
   // Folders Storage

@@ -105,6 +105,53 @@ export class IndexedDBStorageService implements StorageService {
     });
   }
 
+  async deleteBookmarkFolder(id: string): Promise<void> {
+    // Delete a folder and all its descendant folders and bookmarks
+    const db = await this.getDB();
+    return new Promise(async (resolve, reject) => {
+      // Get all folders
+      const folderTx = db.transaction(this.bookmarkFoldersStore, 'readonly');
+      const folderStore = folderTx.objectStore(this.bookmarkFoldersStore);
+      const folderReq = folderStore.getAll();
+      folderReq.onsuccess = async () => {
+        const allFolders: any[] = folderReq.result;
+        // Compute descendant ids recursively
+        const descendantIds: string[] = [];
+        const collect = (parentId: string) => {
+          allFolders
+            .filter(f => f.parentId === parentId)
+            .forEach(f => {
+              descendantIds.push(f.id);
+              collect(f.id);
+            });
+        };
+        collect(id);
+        const idsToDelete = [id, ...descendantIds];
+        // Delete folders
+        const delFolderTx = db.transaction(this.bookmarkFoldersStore, 'readwrite');
+        const delFolderStore = delFolderTx.objectStore(this.bookmarkFoldersStore);
+        idsToDelete.forEach(fid => delFolderStore.delete(fid));
+        // Delete bookmarks belonging to these folders
+        const delBookmarkTx = db.transaction([this.bookmarksStore, this.bookmarkThumbnailsStore], 'readwrite');
+        const bookmarkStore = delBookmarkTx.objectStore(this.bookmarksStore);
+        const thumbStore = delBookmarkTx.objectStore(this.bookmarkThumbnailsStore);
+        const bookmarkReq = bookmarkStore.getAll();
+        bookmarkReq.onsuccess = () => {
+          const bookmarks: any[] = bookmarkReq.result;
+          bookmarks
+            .filter(b => idsToDelete.includes(b.folderId))
+            .forEach(b => {
+              bookmarkStore.delete(b.id);
+              thumbStore.delete(b.id);
+            });
+          resolve();
+        };
+        bookmarkReq.onerror = () => reject(bookmarkReq.error);
+      };
+      folderReq.onerror = () => reject(folderReq.error);
+    });
+  }
+
   async deleteBookmarks(ids: string[]): Promise<void> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
