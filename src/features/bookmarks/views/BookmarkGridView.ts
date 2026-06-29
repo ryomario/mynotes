@@ -49,7 +49,7 @@ export class BookmarkGridView {
 
     const scrollTop = this.mainEl.scrollTop;
     const viewportHeight = this.mainEl.clientHeight;
-    const totalItems = visibleBookmarks.length + visibleFolders.length + 1;
+    const totalItems = visibleBookmarks.length + visibleFolders.length;
     const totalRows = Math.ceil(totalItems / columns);
     const totalHeight = Math.max(itemHeight, totalRows * (itemHeight + gap) - gap);
 
@@ -72,12 +72,10 @@ export class BookmarkGridView {
       card.style.left = `${col * (itemWidth + gap)}px`;
       card.style.top = `${row * (itemHeight + gap)}px`;
 
-      if (i === 0) {
-        this.renderAddCard(card);
-      } else if (i <= visibleFolders.length) {
-        this.renderFolderCard(card, visibleFolders[i - 1], showUrl);
+      if (i < visibleFolders.length) {
+        this.renderFolderCard(card, visibleFolders[i], showUrl);
       } else {
-        this.renderBookmarkCard(card, visibleBookmarks[i - 1 - visibleFolders.length], showUrl);
+        this.renderBookmarkCard(card, visibleBookmarks[i - visibleFolders.length], showUrl);
       }
 
       this.gridEl.appendChild(card);
@@ -124,19 +122,6 @@ export class BookmarkGridView {
       if (selectedCount > 0 && confirm(t('delete_multiple_confirm', { count: String(selectedCount) }))) {
         void this.store.deleteBookmarks(Array.from(this.store.state.selectedBookmarkIds));
       }
-    });
-  }
-
-  private renderAddCard(card: HTMLElement): void {
-    card.className += ' bookmark-add-card';
-    card.innerHTML = `
-      <button class="bookmark-add-btn" type="button">
-        <span class="bookmark-add-icon">&plus;</span>
-        <span>${t('add_bookmark_title')}</span>
-      </button>
-    `;
-    card.querySelector('.bookmark-add-btn')?.addEventListener('click', () => {
-      document.dispatchEvent(new CustomEvent('bookmarks:openBookmarkModal', { detail: { mode: 'create' } }));
     });
   }
 
