@@ -78,6 +78,8 @@
   "menu_open_all": "Buka Semua",
   "move_to_title": "Pindah Folder",
   "move_btn": "Pindahkan",
+  "rename_title": "Ubah Nama",
+  "rename_btn": "Ubah",
   "delete_folder_confirm": "Hapus folder bookmark ini? Tindakan ini juga akan menghapus semua item di dalamnya!",
   "delete_bookmark_confirm": "Hapus bookmark ini?",
   "invalid_url_message": "URL tidak valid. Gunakan format https://domain.com",

@@ -78,6 +78,8 @@
   "menu_open_all": "Open All",
   "move_to_title": "Move Folder",
   "move_btn": "Move",
+  "rename_title": "Rename",
+  "rename_btn": "Rename",
   "delete_folder_confirm": "Delete this bookmark folder? This action will also delete all items inside it!",
   "delete_bookmark_confirm": "Delete this bookmark?",
   "invalid_url_message": "Invalid URL. Use format https://domain.com",

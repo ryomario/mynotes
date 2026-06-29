@@ -9,6 +9,7 @@ import { BookmarkStorageService } from '../services/BookmarkStorageService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
 import { translateDOM, createLanguageSelectorComponent } from '../../../shared/services/i18n/i18n';
 import type { BookmarksStore } from '../state/BookmarksStore';
+import { RenameModalView } from './RenameModalView';
 
 /**
  * Main page view controller for the Bookmarks feature.
@@ -51,6 +52,8 @@ export class BookmarksPageView {
     settingsView.init();
     const moveToModal = new MoveToModalView(this.store);
     moveToModal.init();
+    const renameModal = new RenameModalView(this.store);
+    renameModal.init();
   }
 
   private registerGlobalListeners(): void {

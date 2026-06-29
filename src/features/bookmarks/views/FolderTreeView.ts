@@ -81,53 +81,9 @@ export class FolderTreeView {
       left.innerHTML = '<svg class="folder-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M10,4L12,6H20A2,2 0 0,1 22,8V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4H10Z"/></svg>';
     }
 
-    const isRenaming = this.store.state.renamingFolderId === folder.id;
-    if (isRenaming) {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'folder-rename-input';
-      input.value = folder.name;
-      input.style.width = '120px';
-      input.style.background = 'rgba(255, 255, 255, 0.05)';
-      input.style.border = '1px solid var(--accent)';
-      input.style.color = 'var(--text-primary)';
-      input.style.borderRadius = '4px';
-      input.style.padding = '1px 4px';
-      input.style.fontSize = 'inherit';
-
-      const save = async () => {
-        const val = input.value.trim();
-        if (val && val !== folder.name) {
-          await this.store.renameFolder(folder.id, val);
-        }
-        this.store.setRenamingFolder(null);
-      };
-
-      input.addEventListener('click', (e) => e.stopPropagation());
-      input.addEventListener('mousedown', (e) => e.stopPropagation());
-      input.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-          e.stopPropagation();
-          await save();
-        } else if (e.key === 'Escape') {
-          e.stopPropagation();
-          this.store.setRenamingFolder(null);
-        }
-      });
-      input.addEventListener('blur', async () => {
-        await save();
-      });
-
-      left.appendChild(input);
-      setTimeout(() => {
-        input.focus();
-        input.select();
-      }, 0);
-    } else {
-      const nameEl = document.createElement('span');
-      nameEl.textContent = folder.name;
-      left.appendChild(nameEl);
-    }
+    const nameEl = document.createElement('span');
+    nameEl.textContent = folder.name;
+    left.appendChild(nameEl);
 
     const countEl = document.createElement('span');
     countEl.className = 'folder-count';
@@ -177,7 +133,7 @@ export class FolderTreeView {
         i18nKey: 'menu_rename',
         iconHtml: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6.02 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z"/></svg>',
         onClick: () => {
-          this.store.setRenamingFolder(folder.id);
+          document.dispatchEvent(new CustomEvent('bookmarks:openRenameModal', { detail: { folderId: folder.id } }));
         }
       },
       {
