@@ -81,5 +81,8 @@ export class BookmarksPageView {
         this.store.setSearchQuery(searchEl.value.trim());
       })
     }
+    
+    // disable right click to open system contextmenu
+    document.addEventListener('contextmenu', e => e.preventDefault());
   }
 }

@@ -22,10 +22,11 @@ export class BookmarkGridView {
     this.thumbnailInput?.addEventListener('change', () => void this.handleThumbnailUpload());
 
     // Right-click on empty grid area to show context menu
-    this.gridEl?.addEventListener('contextmenu', (event) => {
+    this.mainEl?.addEventListener('contextmenu', (event) => {
       const target = event.target as HTMLElement;
       if (target.closest('.bookmark-card') || target.closest('.folder-card')) return;
       event.preventDefault();
+      event.stopPropagation();
       this.showGridEmptyMenu(event.clientX, event.clientY);
     });
   }

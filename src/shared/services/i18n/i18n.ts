@@ -54,6 +54,7 @@ export function saveLanguageSetting(lang: Language): void {
 export function t(key: string, replacements?: Record<string, string>): string {
   const lang = getCurrentLanguage();
   const entry = translations[key];
+  if((!entry || !entry[lang]) && import.meta.env.MODE === 'development') console.warn(`Missing translation [${lang}]: ${key}`);
   if (!entry) {
     return key;
   }
