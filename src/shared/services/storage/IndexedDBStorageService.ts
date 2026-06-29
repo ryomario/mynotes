@@ -108,13 +108,13 @@ export class IndexedDBStorageService implements StorageService {
   async deleteBookmarkFolder(id: string): Promise<void> {
     // Delete a folder and all its descendant folders and bookmarks
     const db = await this.getDB();
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       // Get all folders
       const folderTx = db.transaction(this.bookmarkFoldersStore, 'readonly');
       const folderStore = folderTx.objectStore(this.bookmarkFoldersStore);
       const folderReq = folderStore.getAll();
-      folderReq.onsuccess = async () => {
-        const allFolders: any[] = folderReq.result;
+      folderReq.onsuccess = () => {
+        const allFolders: BookmarkFolder[] = folderReq.result;
         // Compute descendant ids recursively
         const descendantIds: string[] = [];
         const collect = (parentId: string) => {
@@ -137,7 +137,7 @@ export class IndexedDBStorageService implements StorageService {
         const thumbStore = delBookmarkTx.objectStore(this.bookmarkThumbnailsStore);
         const bookmarkReq = bookmarkStore.getAll();
         bookmarkReq.onsuccess = () => {
-          const bookmarks: any[] = bookmarkReq.result;
+          const bookmarks: Bookmark[] = bookmarkReq.result;
           bookmarks
             .filter(b => idsToDelete.includes(b.folderId))
             .forEach(b => {
