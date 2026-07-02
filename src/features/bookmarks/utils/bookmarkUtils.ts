@@ -80,11 +80,7 @@ export function getVisibleFolders(
   const normalizedQuery = query.trim().toLowerCase();
 
   if (activeFolderId === 'all') {
-    if (!normalizedQuery) {
-      return folders.filter(f => f.id !== 'all' && !f.parentId);
-    } else {
-      return folders.filter(f => f.id !== 'all' && f.name.toLowerCase().includes(normalizedQuery));
-    }
+    return [];
   } else {
     if (!normalizedQuery) {
       return folders.filter(f => f.parentId === activeFolderId);

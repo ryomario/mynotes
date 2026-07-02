@@ -53,9 +53,9 @@ describe('bookmarkUtils', () => {
   });
 
   it('filters visible folders depending on folder scope and query', () => {
-    expect(getVisibleFolders(folders, 'all', '').map(f => f.id)).toEqual(['work', 'personal']);
+    expect(getVisibleFolders(folders, 'all', '').map(f => f.id)).toEqual([]);
     expect(getVisibleFolders(folders, 'work', '').map(f => f.id)).toEqual(['docs']);
-    expect(getVisibleFolders(folders, 'all', 'do').map(f => f.id)).toEqual(['docs']);
+    expect(getVisibleFolders(folders, 'all', 'do').map(f => f.id)).toEqual([]);
     expect(getVisibleFolders(folders, 'work', 'do').map(f => f.id)).toEqual(['docs']);
   });
 
