@@ -132,6 +132,27 @@ export class ChromeApiStorageService implements StorageService {
     });
   }
 
+  async deleteBookmarkFolder(id: string): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.bookmarks) {
+      console.warn('Chrome Bookmarks API not available');
+      return;
+    }
+    return new Promise((resolve) => {
+      chrome.bookmarks.removeTree(id, () => {
+        void chrome.runtime.lastError; // Ignore if not found
+        // Use Chrome API to remove the entire folder treeail if exists
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+          chrome.storage.local.remove(`thumb_${id}`);
+        }
+        // Always try to remove from IndexedDB too as fallback/cleanup
+        this.notesAdapter.getThumbnail(id).then(exists => {
+          if (exists) this.notesAdapter.saveThumbnail(id, '');
+        });
+        resolve();
+      });
+    });
+  }
+
   async deleteBookmarks(ids: string[]): Promise<void> {
     if (typeof chrome === 'undefined' || !chrome.bookmarks) {
       console.warn('Chrome Bookmarks API not available');

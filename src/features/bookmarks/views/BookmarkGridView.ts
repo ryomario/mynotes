@@ -4,6 +4,7 @@ import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
 import type { Bookmark, BookmarkFolder } from '../types';
 import { fileToDataUrl, getBookmarkCountForFolder } from '../utils/bookmarkUtils';
 import { t } from '../../../shared/services/i18n/i18n';
+import { ContextMenu } from './ContextMenu';
 
 export class BookmarkGridView {
   private gridEl = document.getElementById('bookmarks-grid') as HTMLElement | null;
@@ -18,12 +19,16 @@ export class BookmarkGridView {
     this.mainEl?.addEventListener('scroll', () => this.render());
     window.addEventListener('resize', () => this.render());
     document.addEventListener('bookmarks:settingsChanged', () => this.render());
-    document.addEventListener('bookmarks:closeAllMenus', () => this.closeAllMenus());
-    document.addEventListener('bookmarks:openBookmarkModal', (event) => {
-      const detail = (event as CustomEvent<{ mode: 'create' | 'edit'; bookmarkId?: string }>).detail;
-      void detail;
-    });
     this.thumbnailInput?.addEventListener('change', () => void this.handleThumbnailUpload());
+
+    // Right-click on empty grid area to show context menu
+    this.mainEl?.addEventListener('contextmenu', (event) => {
+      const target = event.target as HTMLElement;
+      if (target.closest('.bookmark-card') || target.closest('.folder-card')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.showGridEmptyMenu(event.clientX, event.clientY);
+    });
   }
 
   private render(): void {
@@ -44,7 +49,7 @@ export class BookmarkGridView {
 
     const scrollTop = this.mainEl.scrollTop;
     const viewportHeight = this.mainEl.clientHeight;
-    const totalItems = visibleBookmarks.length + visibleFolders.length + 1;
+    const totalItems = visibleBookmarks.length + visibleFolders.length;
     const totalRows = Math.ceil(totalItems / columns);
     const totalHeight = Math.max(itemHeight, totalRows * (itemHeight + gap) - gap);
 
@@ -67,12 +72,10 @@ export class BookmarkGridView {
       card.style.left = `${col * (itemWidth + gap)}px`;
       card.style.top = `${row * (itemHeight + gap)}px`;
 
-      if (i === 0) {
-        this.renderAddCard(card);
-      } else if (i <= visibleFolders.length) {
-        this.renderFolderCard(card, visibleFolders[i - 1], showUrl);
+      if (i < visibleFolders.length) {
+        this.renderFolderCard(card, visibleFolders[i], showUrl);
       } else {
-        this.renderBookmarkCard(card, visibleBookmarks[i - 1 - visibleFolders.length], showUrl);
+        this.renderBookmarkCard(card, visibleBookmarks[i - visibleFolders.length], showUrl);
       }
 
       this.gridEl.appendChild(card);
@@ -84,37 +87,6 @@ export class BookmarkGridView {
       empty.textContent = t('no_bookmarks_found');
       this.gridEl.appendChild(empty);
     }
-  }
-
-  private renderFolderCard(card: HTMLElement, folder: BookmarkFolder, showUrl: boolean): void {
-    const isSelectionMode = this.store.state.isSelectionMode;
-
-    card.classList.add('folder-card');
-    card.classList.toggle('selection-disabled', isSelectionMode);
-    card.setAttribute('aria-disabled', String(isSelectionMode));
-    card.innerHTML = `
-      <div class="bookmark-card-link" style="cursor: ${isSelectionMode ? 'not-allowed' : 'pointer'};">
-        <div class="bookmark-thumb placeholder folder-grid-thumb" style="color: var(--accent);">
-          <svg viewBox="0 0 24 24" width="48" height="48">
-            <path fill="currentColor" d="M10,4L12,6H20A2,2 0 0,1 22,8V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4H10Z"/>
-          </svg>
-        </div>
-        <div class="bookmark-meta">
-          <h3 class="${showUrl ? '' : 'no-url'}">${folder.name}</h3>
-          ${showUrl ? `<p>${t('folder_item_count', { count: String(getBookmarkCountForFolder(this.store.state.folders, this.store.state.bookmarks, folder.id)) })}</p>` : ''}
-        </div>
-      </div>
-    `;
-
-    card.querySelector('.bookmark-card-link')?.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (this.store.state.isSelectionMode) return;
-
-      this.store.setActiveFolder(folder.id);
-      const searchEl = document.getElementById('bookmark-search') as HTMLInputElement | null;
-      if (searchEl) searchEl.value = '';
-      document.querySelector('.bookmarks-main')?.scrollTo({ top: 0 });
-    });
   }
 
   private renderSelectionToolbar(visible: Bookmark[]): void {
@@ -153,16 +125,88 @@ export class BookmarkGridView {
     });
   }
 
-  private renderAddCard(card: HTMLElement): void {
-    card.className += ' bookmark-add-card';
+  private renderFolderCard(card: HTMLElement, folder: BookmarkFolder, showUrl: boolean): void {
+    const isSelectionMode = this.store.state.isSelectionMode;
+
+    card.classList.add('folder-card');
+    card.classList.toggle('selection-disabled', isSelectionMode);
+    card.setAttribute('aria-disabled', String(isSelectionMode));
     card.innerHTML = `
-      <button class="bookmark-add-btn" type="button">
-        <span class="bookmark-add-icon">&plus;</span>
-        <span>${t('add_bookmark_title')}</span>
-      </button>
+      <div class="bookmark-card-link" style="cursor: ${isSelectionMode ? 'not-allowed' : 'pointer'};">
+        <div class="bookmark-thumb placeholder folder-grid-thumb" style="color: var(--accent);">
+          <svg viewBox="0 0 24 24" width="48" height="48">
+            <path fill="currentColor" d="M10,4L12,6H20A2,2 0 0,1 22,8V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4H10Z"/>
+          </svg>
+        </div>
+        <div class="bookmark-meta">
+          <h3 class="${showUrl ? '' : 'no-url'}">${folder.name}</h3>
+          ${showUrl ? `<p>${t('folder_item_count', { count: String(getBookmarkCountForFolder(this.store.state.folders, this.store.state.bookmarks, folder.id)) })}</p>` : ''}
+        </div>
+      </div>
+      <button class="folder-menu-btn" title="Folder actions">⋮</button>
     `;
-    card.querySelector('.bookmark-add-btn')?.addEventListener('click', () => {
-      document.dispatchEvent(new CustomEvent('bookmarks:openBookmarkModal', { detail: { mode: 'create' } }));
+
+    // Click on folder card to navigate
+    card.querySelector('.bookmark-card-link')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (this.store.state.isSelectionMode) return;
+      this.store.setActiveFolder(folder.id);
+      const searchEl = document.getElementById('bookmark-search') as HTMLInputElement | null;
+      if (searchEl) searchEl.value = '';
+      document.querySelector('.bookmarks-main')?.scrollTo({ top: 0 });
+    });
+    
+    const triggerMenu = (clientX: number, clientY: number) => {
+      const items = [
+        {
+          label: 'Rename',
+          i18nKey: 'menu_rename',
+          iconHtml: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6.02 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z"/></svg>',
+          onClick: () => {
+            document.dispatchEvent(new CustomEvent('bookmarks:openRenameModal', { detail: { folderId: folder.id } }));
+          }
+        },
+        {
+          label: 'Delete',
+          i18nKey: 'menu_delete',
+          iconHtml: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>',
+          danger: true,
+          onClick: async () => {
+            if (confirm(t('delete_folder_confirm'))) {
+              await this.store.deleteFolder(folder.id);
+            }
+          }
+        },
+        {
+          label: 'Move To...',
+          i18nKey: 'menu_move_to',
+          iconHtml: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M14,18V15H10V11H14V8L19,13M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z"/></svg>',
+          onClick: () => {
+            document.dispatchEvent(new CustomEvent('bookmarks:openMoveToModal', { detail: { folderId: folder.id } }));
+          }
+        },
+        {
+          label: 'Open All',
+          i18nKey: 'menu_open_all',
+          iconHtml: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/></svg>',
+          onClick: async () => {
+            await this.store.openAllInFolder(folder.id);
+          }
+        }
+      ];
+      ContextMenu.getInstance().show(clientX, clientY, items);
+    };
+
+    card.querySelector('.folder-menu-btn')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      triggerMenu(rect.left, rect.bottom + 4);
+    });
+
+    card.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      triggerMenu(event.clientX, event.clientY);
     });
   }
 
@@ -178,13 +222,6 @@ export class BookmarkGridView {
         </div>
       </a>
       <button class="bookmark-menu-btn" title="Bookmark actions">⋮</button>
-      <div class="bookmark-menu ${this.store.state.activeMenuBookmarkId === bookmark.id ? 'show' : ''}">
-        <button class="bookmark-menu-item select-bookmark">${t('menu_select')}</button>
-        <button class="bookmark-menu-item edit-bookmark">${t('menu_edit')}</button>
-        <button class="bookmark-menu-item gen-thumb">${t('menu_gen_thumb')}</button>
-        <button class="bookmark-menu-item upload-thumb">${t('menu_change_thumb')}</button>
-        <button class="bookmark-menu-item delete-bookmark" style="color: #ef4444;">${t('menu_delete')}</button>
-      </div>
     `;
 
     const link = card.querySelector('.bookmark-card-link') as HTMLAnchorElement;
@@ -196,28 +233,56 @@ export class BookmarkGridView {
       });
     }
 
+    const triggerMenu = (clientX: number, clientY: number) => {
+      const items = [
+        {
+          label: 'Select',
+          i18nKey: 'menu_select',
+          onClick: () => this.store.enterSelectionMode(bookmark.id)
+        },
+        {
+          label: 'Edit',
+          i18nKey: 'menu_edit',
+          onClick: () => {
+            document.dispatchEvent(new CustomEvent('bookmarks:openBookmarkModal', { detail: { mode: 'edit', bookmarkId: bookmark.id } }));
+          }
+        },
+        {
+          label: 'Generate Thumbnail',
+          i18nKey: 'menu_gen_thumb',
+          onClick: () => void this.generateThumbnail(bookmark)
+        },
+        {
+          label: 'Change Thumbnail',
+          i18nKey: 'menu_change_thumb',
+          onClick: () => {
+            this.thumbnailTargetId = bookmark.id;
+            this.thumbnailInput?.click();
+          }
+        },
+        {
+          label: 'Delete',
+          i18nKey: 'menu_delete',
+          danger: true,
+          onClick: () => {
+            if (confirm(t('delete_bookmark_confirm'))) void this.store.deleteBookmark(bookmark.id);
+          }
+        }
+      ];
+      ContextMenu.getInstance().show(clientX, clientY, items);
+    };
+
     card.querySelector('.bookmark-menu-btn')?.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      this.store.setActiveMenuBookmark(this.store.state.activeMenuBookmarkId === bookmark.id ? null : bookmark.id);
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      triggerMenu(rect.left, rect.bottom + 4);
     });
-    card.querySelector('.edit-bookmark')?.addEventListener('click', () => {
-      this.store.setActiveMenuBookmark(null);
-      document.dispatchEvent(new CustomEvent('bookmarks:openBookmarkModal', { detail: { mode: 'edit', bookmarkId: bookmark.id } }));
-    });
-    card.querySelector('.upload-thumb')?.addEventListener('click', () => {
-      this.thumbnailTargetId = bookmark.id;
-      this.store.setActiveMenuBookmark(null);
-      this.thumbnailInput?.click();
-    });
-    card.querySelector('.gen-thumb')?.addEventListener('click', () => void this.generateThumbnail(bookmark));
-    card.querySelector('.select-bookmark')?.addEventListener('click', () => {
-      this.store.setActiveMenuBookmark(null);
-      this.store.enterSelectionMode(bookmark.id);
-    });
-    card.querySelector('.delete-bookmark')?.addEventListener('click', () => {
-      this.store.setActiveMenuBookmark(null);
-      if (confirm(t('delete_bookmark_confirm'))) void this.store.deleteBookmark(bookmark.id);
+
+    card.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      triggerMenu(event.clientX, event.clientY);
     });
   }
 
@@ -239,7 +304,6 @@ export class BookmarkGridView {
   }
 
   private async generateThumbnail(bookmark: Bookmark): Promise<void> {
-    this.store.setActiveMenuBookmark(null);
     const thumb = await this.thumbnailService.generateThumbnail(bookmark.url);
     await this.store.saveThumbnail(bookmark.id, thumb);
   }
@@ -252,7 +316,26 @@ export class BookmarkGridView {
     if (this.thumbnailInput) this.thumbnailInput.value = '';
   }
 
-  private closeAllMenus(): void {
-    this.store.setActiveMenuBookmark(null);
+  private showGridEmptyMenu(x: number, y: number): void {
+    const items = [
+      {
+        label: 'New Folder',
+        i18nKey: 'add_folder_title',
+        iconHtml: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M10,4L12,6H20A2,2 0 0,1 22,8V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4H10M12,10H14V14H18V16H14V20H12V16H8V14H12V10Z"/></svg>',
+        onClick: () => {
+          document.dispatchEvent(new CustomEvent('bookmarks:openFolderModal', { detail: { mode: 'create' } }));
+        }
+      },
+      {
+        label: 'New Bookmark',
+        i18nKey: 'add_bookmark_title',
+        iconHtml: '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17,3H7A2,2 0 0,0 5,5V21L12,18L19,21V5A2,2 0 0,0 17,3M12,8L14,12H18L15,14.5L16,18.5L12,16L8,18.5L9,14.5L6,12H10L12,8Z"/></svg>',
+        onClick: () => {
+          document.dispatchEvent(new CustomEvent('bookmarks:openBookmarkModal', { detail: { mode: 'create' } }));
+        }
+      }
+    ];
+
+    ContextMenu.getInstance().show(x, y, items);
   }
 }

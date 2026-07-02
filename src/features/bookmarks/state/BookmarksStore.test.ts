@@ -22,6 +22,7 @@ function createMockStorage(): StorageService {
     getBookmarks: vi.fn().mockResolvedValue([...bookmarks]),
     saveBookmark: vi.fn().mockResolvedValue(undefined),
     deleteBookmark: vi.fn().mockResolvedValue(undefined),
+    deleteBookmarkFolder: vi.fn().mockResolvedValue(undefined),
     deleteBookmarks: vi.fn().mockResolvedValue(undefined),
     getBookmarkFolders: vi.fn().mockResolvedValue([...folders]),
     saveBookmarkFolder: vi.fn().mockResolvedValue(undefined),
@@ -124,5 +125,56 @@ describe('BookmarksStore', () => {
     await store.saveThumbnail('1', 'data:image/png;base64,updated');
     expect(store.state.thumbnailCache.get('1')).toBe('data:image/png;base64,updated');
     expect(storage.saveThumbnail).toHaveBeenCalledWith('1', 'data:image/png;base64,updated');
+  });
+
+  it('renames a folder', async () => {
+    await store.loadBookmarks();
+    await store.renameFolder('work', 'Job Projects');
+    const folder = store.state.folders.find(f => f.id === 'work');
+    expect(folder?.name).toBe('Job Projects');
+    expect(storage.saveBookmarkFolder).toHaveBeenCalled();
+  });
+
+  it('deletes a folder cascade and resets active folder if needed', async () => {
+    await store.loadBookmarks();
+    // Set active folder to work
+    store.setActiveFolder('work');
+    expect(store.state.activeFolderId).toBe('work');
+
+    await store.deleteFolder('work');
+    // Folder should be deleted
+    expect(store.state.folders.some(f => f.id === 'work')).toBe(false);
+    // Bookmark in work should be deleted cascade
+    expect(store.state.bookmarks.some(b => b.id === '2')).toBe(false);
+    // Active folder should reset to all
+    expect(store.state.activeFolderId).toBe('all');
+  });
+
+  it('moves a folder and prevents circular moves', async () => {
+    await store.loadBookmarks();
+    // Add subfolder to favorites
+    const sub = await store.addFolder('SubFav', 'favorites');
+    
+    // Move favorites into work
+    await store.moveFolder('favorites', 'work');
+    const fav = store.state.folders.find(f => f.id === 'favorites');
+    expect(fav?.parentId).toBe('work');
+
+    // Attempt circular move (move work into favorites' subfolder SubFav)
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await store.moveFolder('work', sub.id);
+    const work = store.state.folders.find(f => f.id === 'work');
+    // Parent should still be null (or unchanged)
+    expect(work?.parentId).toBeNull();
+    consoleSpy.mockRestore();
+  });
+
+  it('opens all bookmarks in a folder', async () => {
+    await store.loadBookmarks();
+    const openMock = vi.fn();
+    vi.stubGlobal('window', { open: openMock });
+    await store.openAllInFolder('favorites');
+    expect(openMock).toHaveBeenCalledWith('https://one.test', '_blank');
+    vi.unstubAllGlobals();
   });
 });

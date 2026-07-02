@@ -348,8 +348,8 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid var(--border-color);
-  background: rgba(15, 23, 42, 0.7);
+  border: 2px solid var(--border-color);
+  background: var(--bg-color);
   color: var(--text-primary);
   cursor: pointer;
   opacity: 0;
@@ -395,6 +395,104 @@ body {
 
 .bookmark-menu-item:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* Folder menu button */
+.folder-menu-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition);
+}
+
+/* Show folder menu button on hover */
+.folder-card:hover .folder-menu-btn,
+.folder-menu-btn:focus-visible,
+.folder-card.menu-open .folder-menu-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Folder context menu */
+.folder-menu {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  min-width: 140px;
+  max-width: 200px;
+  border: 1px solid var(--border-color);
+  background: var(--dropdown-bg);
+  border-radius: 8px;
+  padding: 6px;
+  display: none;
+  z-index: 5;
+}
+
+.folder-menu.show {
+  display: block;
+}
+
+.folder-menu-item {
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.folder-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Grid empty-area context menu */
+.grid-empty-menu {
+  position: fixed;
+  min-width: 160px;
+  max-width: 220px;
+  border: 1px solid var(--border-color);
+  background: var(--dropdown-bg);
+  backdrop-filter: blur(12px);
+  border-radius: 10px;
+  padding: 6px;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: gridMenuFadeIn 0.15s ease-out;
+}
+
+@keyframes gridMenuFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.grid-empty-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.9rem;
+  transition: background 0.15s ease;
+}
+
+.grid-empty-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .bookmarks-empty {

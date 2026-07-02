@@ -25,6 +25,7 @@ describe('NotesStore', () => {
       getBookmarks: vi.fn(),
       saveBookmark: vi.fn(),
       deleteBookmark: vi.fn(),
+      deleteBookmarkFolder: vi.fn(),
       deleteBookmarks: vi.fn(),
       getBookmarkFolders: vi.fn(),
       saveBookmarkFolder: vi.fn(),

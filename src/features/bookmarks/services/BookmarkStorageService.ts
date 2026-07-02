@@ -61,6 +61,11 @@ export class BookmarkStorageService {
     return this.storage.deleteBookmark(id);
   }
 
+  async deleteFolder(id: string): Promise<void> {
+    // storage implements deleteBookmarkFolder per interface
+    return this.storage.deleteBookmarkFolder(id);
+  }
+
   async deleteBookmarks(ids: string[]): Promise<void> {
     return this.storage.deleteBookmarks(ids);
   }

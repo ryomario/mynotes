@@ -3,11 +3,13 @@ import { BookmarkGridView } from './BookmarkGridView';
 import { BookmarkModalView } from './BookmarkModalView';
 import { FolderModalView } from './FolderModalView';
 import { BookmarksSettingsView } from './BookmarksSettingsView';
+import { MoveToModalView } from './MoveToModalView';
 import { ThumbnailService } from '../services/ThumbnailService';
 import { BookmarkStorageService } from '../services/BookmarkStorageService';
 import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
 import { translateDOM, createLanguageSelectorComponent } from '../../../shared/services/i18n/i18n';
 import type { BookmarksStore } from '../state/BookmarksStore';
+import { RenameModalView } from './RenameModalView';
 
 /**
  * Main page view controller for the Bookmarks feature.
@@ -48,6 +50,10 @@ export class BookmarksPageView {
     folderModal.init();
     const settingsView = new BookmarksSettingsView(this.store, this.settingsService, this.thumbnailService);
     settingsView.init();
+    const moveToModal = new MoveToModalView(this.store);
+    moveToModal.init();
+    const renameModal = new RenameModalView(this.store);
+    renameModal.init();
   }
 
   private registerGlobalListeners(): void {
@@ -78,5 +84,8 @@ export class BookmarksPageView {
         this.store.setSearchQuery(searchEl.value.trim());
       })
     }
+    
+    // disable right click to open system contextmenu
+    document.addEventListener('contextmenu', e => e.preventDefault());
   }
 }

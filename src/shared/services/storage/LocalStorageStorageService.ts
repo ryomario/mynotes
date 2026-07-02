@@ -77,6 +77,28 @@ export class LocalStorageStorageService implements StorageService {
     localStorage.setItem(this.bookmarkFoldersKey, JSON.stringify(folders));
   }
 
+  async deleteBookmarkFolder(id: string): Promise<void> {
+    const folders = await this.getBookmarkFolders();
+    const descendantIds: string[] = [];
+    const collect = (parentId: string) => {
+      folders
+        .filter(f => f.parentId === parentId)
+        .forEach(f => {
+          descendantIds.push(f.id);
+          collect(f.id);
+        });
+    };
+    collect(id);
+    const idsToDelete = [id, ...descendantIds];
+
+    const filteredFolders = folders.filter(f => !idsToDelete.includes(f.id));
+    localStorage.setItem(this.bookmarkFoldersKey, JSON.stringify(filteredFolders));
+
+    const bookmarks = await this.getBookmarks();
+    const filteredBookmarks = bookmarks.filter(b => !idsToDelete.includes(b.folderId));
+    localStorage.setItem(this.bookmarksKey, JSON.stringify(filteredBookmarks));
+  }
+
   async getThumbnail(): Promise<string | undefined> {
     return undefined;
   }
