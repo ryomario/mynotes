@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: CorelDRAW -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="1080px" height="1080px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+viewBox="0 0 1080 1080"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
+ <defs>
+    <linearGradient id="id0" gradientUnits="userSpaceOnUse" x1="540" y1="1080" x2="540" y2="0">
+     <stop offset="0" stop-opacity="1" stop-color="#F4F1EC"/>
+     <stop offset="1" stop-opacity="1" stop-color="#FDFCF4"/>
+    </linearGradient>
+ </defs>
+ <g id="Layer_x0020_1">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <g>
+   <path id="bg-light" fill="url(#id0)" d="M221.835 0l636.33 0c122.009,0 221.835,99.826 221.835,221.835l0 636.33c0,122.009 -99.826,221.835 -221.835,221.835l-636.33 0c-122.009,0 -221.835,-99.826 -221.835,-221.835l0 -636.33c0,-122.009 99.826,-221.835 221.835,-221.835z"/>
+   <path id="_1" fill="#DAD7D6" d="M221.835 0l636.33 0c122.009,0 221.835,99.826 221.835,221.835l0 636.33c0,122.009 -99.826,221.835 -221.835,221.835l-636.33 0c-122.009,0 -221.835,-99.826 -221.835,-221.835l0 -636.33c0,-122.009 99.826,-221.835 221.835,-221.835zm636.33 3l-636.33 0c-60.176,0 -114.885,24.62 -154.55,64.285 -39.665,39.665 -64.285,94.374 -64.285,154.55l0 636.33c0,60.176 24.62,114.885 64.285,154.55 39.665,39.665 94.374,64.285 154.55,64.285l636.33 0c60.176,0 114.885,-24.62 154.55,-64.285 39.665,-39.665 64.285,-94.374 64.285,-154.55l0 -636.33c0,-60.176 -24.62,-114.885 -64.285,-154.55 -39.665,-39.665 -94.374,-64.285 -154.55,-64.285z"/>
+  </g>
+  <g id="circle-icon">
+   <path fill="none" stroke="#FEBF16" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" d="M183.241 830.31c-68.004,-81.044 -105.28,-183.458 -105.28,-289.254 0,-248.529 201.472,-450 450,-450 105.796,0 208.21,37.276 289.254,105.279"/>
+   <path fill="none" stroke="#2F78FA" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="22.9256" d="M896.58 282.946c52.968,75.648 81.381,165.761 81.381,258.11 0,248.528 -201.472,450 -450,450 -92.349,0 -182.462,-28.413 -258.11,-81.382"/>
+  </g>
+  <g id="mark-icon">
+   <path fill="#2F78FA" stroke="#3A465A" stroke-width="25" stroke-linejoin="round" stroke-miterlimit="22.9256" d="M885.487 847.68l-73.469 -52.921 -76.309 52.921 0 -372.434c0,-21.739 17.787,-39.526 39.526,-39.526l70.726 0c21.74,0 39.526,17.788 39.526,39.526l0 372.434z"/>
+  </g>
+  <g id="notes-icon">
+   <rect fill="white" stroke="#3A465A" stroke-width="30" stroke-linejoin="round" stroke-miterlimit="22.9256" x="274.113" y="287.104" width="452.885" height="569.325" rx="66.802" ry="67.917"/>
+   <line fill="none" stroke="#3A465A" stroke-width="40" stroke-linecap="round" stroke-miterlimit="22.9256" x1="389.403" y1="247.105" x2="389.403" y2= "342.988" />
+   <line fill="none" stroke="#3A465A" stroke-width="40" stroke-linecap="round" stroke-miterlimit="22.9256" x1="514.108" y1="247.105" x2="514.108" y2= "342.988" />
+   <line fill="none" stroke="#3A465A" stroke-width="40" stroke-linecap="round" stroke-miterlimit="22.9256" x1="635.841" y1="247.105" x2="635.841" y2= "342.988" />
+   <line fill="none" stroke="#3A465A" stroke-width="30" stroke-linecap="round" stroke-miterlimit="22.9256" x1="357.836" y1="543.981" x2="642.284" y2= "543.981" />
+   <line fill="none" stroke="#3A465A" stroke-width="30" stroke-linecap="round" stroke-miterlimit="22.9256" x1="357.836" y1="633.289" x2="642.284" y2= "633.289" />
+   <line fill="none" stroke="#3A465A" stroke-width="30" stroke-linecap="round" stroke-miterlimit="22.9256" x1="357.836" y1="724.503" x2="530.498" y2= "724.503" />
+   <line fill="none" stroke="#FEBF16" stroke-width="30" stroke-linecap="round" stroke-miterlimit="22.9256" x1="357.836" y1="450.85" x2="503.779" y2= "450.85" />
+  </g>
+ </g>
+</svg>

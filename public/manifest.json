@@ -3,6 +3,12 @@
   "name": "MyNotes - New Tab",
   "version": "1.0",
   "description": "A beautiful local-first notes app that replaces your new tab.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
