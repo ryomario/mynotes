@@ -55,10 +55,15 @@ export class BookmarkModalView {
       this.folderInput?.appendChild(option);
     });
 
-    const fallback = bookmarkSettingsService.getBookmarkSettings().defaultFolderId
-      || this.store.state.folders.find(folder => folder.id !== 'all')?.id
-      || '';
-    this.folderInput.value = selected || fallback;
+    const settings = bookmarkSettingsService.getBookmarkSettings();
+    let defaultFolderId = settings.defaultFolderId;
+    if (defaultFolderId === '__active__') {
+      defaultFolderId = this.store.state.activeFolderId;
+    }
+    if (!defaultFolderId || defaultFolderId === 'all') {
+      defaultFolderId = this.store.state.folders.find(folder => folder.id !== 'all')?.id || '';
+    }
+    this.folderInput.value = selected || defaultFolderId;
   }
 
   private open(mode: 'create' | 'edit' = 'create', bookmarkId?: string): void {
@@ -78,8 +83,14 @@ export class BookmarkModalView {
       }
     } else {
       if (this.modalTitle) this.modalTitle.textContent = t('add_bookmark_title');
-      const defaultFolderId = (this.store.state.activeFolderId != 'all' ? this.store.state.activeFolderId : '')
-        || bookmarkSettingsService.getBookmarkSettings().defaultFolderId;
+      const settings = bookmarkSettingsService.getBookmarkSettings();
+      let defaultFolderId = settings.defaultFolderId;
+      if (defaultFolderId === '__active__') {
+        defaultFolderId = this.store.state.activeFolderId;
+      }
+      if (!defaultFolderId || defaultFolderId === 'all') {
+        defaultFolderId = this.store.state.folders.find(folder => folder.id !== 'all')?.id || '';
+      }
       if (defaultFolderId) this.folderInput.value = defaultFolderId;
     }
 

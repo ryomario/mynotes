@@ -55,6 +55,7 @@
   "bookmarks_settings_title": "Pengaturan",
   "bookmarks_settings_heading": "Bookmark",
   "settings_default_folder_label": "Default folder untuk form",
+  "current_active_folder": "(folder aktif saat ini)",
   "settings_open_new_tab_label": "Buka bookmark di tab baru",
   "settings_show_url_label": "Tampilkan URL di card",
   "dev_tools_heading": "Alat Pengembang",

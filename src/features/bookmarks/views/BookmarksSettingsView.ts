@@ -46,6 +46,12 @@ export class BookmarksSettingsView {
     if (this.defaultFolderSelect) {
       const selected = this.defaultFolderSelect.value || settings.defaultFolderId;
       this.defaultFolderSelect.innerHTML = '';
+      
+      const activeOption = document.createElement('option');
+      activeOption.value = '__active__';
+      activeOption.textContent = t('current_active_folder');
+      this.defaultFolderSelect.appendChild(activeOption);
+
       orderFoldersForSelect(this.store.state.folders).forEach(folder => {
         const option = document.createElement('option');
         option.value = folder.id;

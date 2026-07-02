@@ -55,6 +55,7 @@
   "bookmarks_settings_title": "Settings",
   "bookmarks_settings_heading": "Bookmarks",
   "settings_default_folder_label": "Default folder for forms",
+  "current_active_folder": "(current active folder)",
   "settings_open_new_tab_label": "Open bookmark in new tab",
   "settings_show_url_label": "Show URL in card",
   "dev_tools_heading": "Developer Tools",

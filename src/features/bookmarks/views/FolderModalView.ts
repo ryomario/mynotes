@@ -1,6 +1,7 @@
 import { t } from '../../../shared/services/i18n/i18n';
 import type { BookmarksStore } from '../state/BookmarksStore';
 import { orderFoldersForSelect } from '../utils/bookmarkUtils';
+import { bookmarkSettingsService } from '../services/bookmarkSettingsService';
 
 export class FolderModalView {
   private addFolderBtn = document.getElementById('add-folder-btn') as HTMLButtonElement | null;
@@ -30,7 +31,6 @@ export class FolderModalView {
 
   private renderParentOptions(): void {
     if (!this.parentInput) return;
-    const selected = this.store.state.activeFolderId;
     this.parentInput.innerHTML = `<option value="">${t('no_parent_option')}</option>`;
     orderFoldersForSelect(this.store.state.folders).forEach(folder => {
       const option = document.createElement('option');
@@ -38,10 +38,16 @@ export class FolderModalView {
       option.textContent = `${'-'.repeat(folder.level)}${folder.level > 0 ? ' ' : ''}${folder.name}`;
       this.parentInput?.appendChild(option);
     });
-    this.parentInput.value = selected;
-    if (!selected || selected == 'all') {
-      this.parentInput.value = '';
+
+    const settings = bookmarkSettingsService.getBookmarkSettings();
+    let defaultFolderId = settings.defaultFolderId;
+    if (defaultFolderId === '__active__') {
+      defaultFolderId = this.store.state.activeFolderId;
     }
+    if (!defaultFolderId || defaultFolderId === 'all') {
+      defaultFolderId = '';
+    }
+    this.parentInput.value = defaultFolderId;
   }
 
   private open(): void {
